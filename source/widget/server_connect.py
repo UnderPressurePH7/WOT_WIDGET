@@ -8,27 +8,14 @@ from .config import g_configParams
 from .utils import print_error, print_debug, g_statsWrapper
 
 class ServerClient(object):
-    def __init__(self, access_key=None):
+    def __init__(self):
         self.base_url = "https://node-websocket-758468a49fee.herokuapp.com"
-        self.access_key = access_key or self._get_api_key()
+        self.access_key = None
         self.secret_key = "06032002-Hedebu"
         self.lock = threading.Lock()
         self.last_request_time = 0
         self.request_cooldown = 1
-    
-    def _get_api_key(self):
-        try:
-            if g_configParams and g_configParams.api_key:
-                return g_configParams.api_key.value
-            return "dev-test"  
-        except Exception as e:
-            print_error("[ServerClient] Error getting API key: {}".format(e))
-            return "dev-test"
-    
-    def _ensure_access_key(self):
-        if not self.access_key or self.access_key == "dev-test":
-            self.access_key = self._get_api_key()
-    
+        
     def _rate_limit(self):
         with self.lock:
             now = time.time()
@@ -37,12 +24,12 @@ class ServerClient(object):
                 sleep_time = self.request_cooldown - time_since_last
                 time.sleep(sleep_time)
             self.last_request_time = time.time()
-    
-    def send_stats(self, player_id=None):
+
+    def send_stats(self, api_key=None, player_id=None):
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))
         def async_send():
             try:
-                self._ensure_access_key()  # ← Переконуємося, що ключ актуальний
+                self.access_key = api_key if api_key else 'dev-test'
                 self._rate_limit()
                 raw_data = g_statsWrapper.get_raw_data()
                 
