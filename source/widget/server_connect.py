@@ -122,4 +122,4 @@ class ServerClient(object):
         print_debug("[ServerClient] Finalizing")
         self.disconnect()
 
-g_serverClient = ServerClient(g_config)
+g_serverClient = ServerClient()
