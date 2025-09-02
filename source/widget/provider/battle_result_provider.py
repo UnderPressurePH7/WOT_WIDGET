@@ -68,8 +68,6 @@ class BattleResultsProvider(object):
                 battle_result = 1  
             else:
                 battle_result = 0
-
-            g_statsWrapper.set_battle_info(arenaUniqueID, duration=duration, win=battle_result)
             
             print_debug("[BattleResultsProvider] Processing results for ArenaUniqueID: {}, Duration: {}, PlayerTeam: {}, WinnerTeam: {}, Result: {}".format(
                     arenaUniqueID, duration, player_team, winner_team, battle_result
@@ -99,7 +97,7 @@ class BattleResultsProvider(object):
                 player_name = players.get(accountDBID, {}).get('realName', 'Unknown')
 
                 g_statsWrapper.update_battle_stats(arena_id=arenaUniqueID, player_id=accountDBID, damage=damage, kills=kills, vehicle=vehicle_name, win=battle_result, duration=duration)
-                g_serverClient.send_stats(player_id=accountDBID)
+            g_serverClient.send_stats(player_id=accountDBID)
 
             self.results_cache.remove(arenaUniqueID) if arenaUniqueID in self.results_cache else None
         except Exception as e:
