@@ -32,7 +32,6 @@ class ServerClient(object):
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))
         def async_send():
             try:
-                self.setApiKey()
                 self._rate_limit()
                 raw_data = g_statsWrapper.get_raw_data()
                 
