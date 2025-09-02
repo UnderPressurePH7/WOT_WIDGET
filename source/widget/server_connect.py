@@ -4,11 +4,11 @@ import json
 import time
 import threading
 import urllib2
-
+from .config import g_configParams
 from .utils import print_error, print_debug, g_statsWrapper
 
 class ServerClient(object):
-    def __init__(self, access_key="test"):
+    def __init__(self, access_key=g_configParams.api_key.value):
         self.base_url = "https://node-websocket-758468a49fee.herokuapp.com"
         self.access_key = access_key
         self.secret_key = "06032002-Hedebu"

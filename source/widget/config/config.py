@@ -95,6 +95,7 @@ class Config(object):
         try:
             config_items = self.configParams.items()
             enabled_param = config_items.get('enabled')
+            api_key_param = config_items.get('apiKey')
             
             template = {
                 'modDisplayName': u'Віджет від Палича',
@@ -107,8 +108,8 @@ class Config(object):
                      {
                         'type': 'TextInput',
                         'text': 'Api Key',
-                        'value': self.params['api_key'].value,
-                        'varName': 'api_key',
+                        'value': api_key_param.value,
+                        'varName': 'apiKey',
                         'tooltip': u'{HEADER}Ключ{/HEADER}{BODY}Ваш API ключ для передачі даних{/BODY}'
                     },
                 ],

@@ -6,12 +6,12 @@ class ConfigParams(object):
     
     def __init__(self):
         self.enabled = Param(['enabled'], defaultValue=True)
-        self.api_domain = Param(['api_key'], defaultValue=u'dev-test', valueType=unicode)
+        self.api_key = Param(['apiKey'], defaultValue=u'dev-test')
 
     def items(self):
         result = {}
         for attr_name in dir(self):
-            if not attr_name.startswith('_'):
+            if not attr_name.startswith('_') and not callable(getattr(self, attr_name)):
                 attr = getattr(self, attr_name)
                 if isinstance(attr, Param):
                     result[attr.tokenName] = attr
