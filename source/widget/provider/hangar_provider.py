@@ -38,6 +38,7 @@ class HangarProvider(object):
     def onSendPlayerInfo(self):
         print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
         g_serverClient.setApiKey(g_config.api_key.value)
+        print_debug("[HangarProvider] API key set to: {}".format(g_config.api_key.value))
         g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
         g_serverClient.send_stats(player_id=self.account_id)
 
