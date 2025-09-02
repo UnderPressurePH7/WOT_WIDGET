@@ -28,7 +28,10 @@ class ServerClient(object):
             self.last_request_time = time.time()
 
     def setApiKey(self):
-        self.access_key = self.config.api_key.value if self.config and self.config.api_key else 'dev-test'
+        if self.config is not None:
+            self.access_key = self.config.api_key.value
+        else:
+            self.access_key = 'dev-test'
 
     def send_stats(self, api_key=None, player_id=None):
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))

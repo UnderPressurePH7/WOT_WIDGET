@@ -154,6 +154,9 @@ class Config(object):
 
     def _notify_config_changed(self):
         try:
+            from mod_widget.wdget.server_connect import  g_serverClient
+
+            g_serverClient.setApiKey(self.configParams.items().get('apiKey'))
             print_debug("[Config] Config change notification sent")
         except Exception as e:
             print_error("[Config] Error notifying config change: {}".format(str(e)))

@@ -13,6 +13,8 @@ class HangarProvider(object):
 
     def __init__(self):
         self.isInHangar = False
+        self.account_id = None
+        self.account_name = None
 
         self.currentVehicleName = None
         g_playerEvents.onAccountShowGUI += self.onAccountShowGUI
@@ -24,10 +26,8 @@ class HangarProvider(object):
     def onAccountShowGUI(self, *args):
         player = BigWorld.player()
         if player:
-            account_id = getattr(player, 'databaseID', None)
-            account_name = getattr(player, 'name', None)
-            g_statsWrapper.add_player_info(player_id=account_id, player_name=account_name)
-            g_serverClient.send_stats(player_id=account_id)
+            self.account_id = getattr(player, 'databaseID', None)
+            self.account_name = getattr(player, 'name', None)
         else:
             print_debug("[HangarProvider] Player not found")
             BigWorld.callback(1, self.onAccountShowGUI)
@@ -46,9 +46,11 @@ class HangarProvider(object):
     
         if not item:
             return
-        
         self.currentVehicleName = item.typeDescr.userString
 
+        g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
+        g_serverClient.send_stats(player_id=self.account_id)
+        
     def fini(self):
         g_playerEvents.onAccountShowGUI -= self.onAccountShowGUI
         self.hangarSpace.onSpaceCreate -= self.onHangarSpaceCreate
