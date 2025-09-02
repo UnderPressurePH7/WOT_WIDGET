@@ -29,7 +29,7 @@ class HangarProvider(object):
         if player:
             self.account_id = getattr(player, 'databaseID', None)
             self.account_name = getattr(player, 'name', None)
-            BigWorld.callback(10.0, self.onSendPlayerInfo)
+            BigWorld.callback(5.0, self.onSendPlayerInfo)
         else:
             print_debug("[HangarProvider] Player not found")
             BigWorld.callback(1, self.onAccountShowGUI)
