@@ -34,7 +34,8 @@ class Config(object):
     def _create_default_config(self):
         try:
             config_data = {}
-            for tokenName, param in self.configParams.items():
+            config_items = self.configParams.items()
+            for tokenName, param in config_items.items():
                 config_data[tokenName] = param.defaultValue
 
             with open(self.config_path, 'w') as f:
@@ -49,7 +50,8 @@ class Config(object):
                 with open(self.config_path, 'r') as f:
                     config_data = json.load(f)
 
-                for tokenName, param in self.configParams.items():
+                config_items = self.configParams.items()
+                for tokenName, param in config_items.items():
                     if tokenName in config_data:
                         try:
                             param.jsonValue = config_data[tokenName]
@@ -68,7 +70,8 @@ class Config(object):
     def save_config(self):
         try:
             config_data = {}
-            for tokenName, param in self.configParams.items():
+            config_items = self.configParams.items()
+            for tokenName, param in config_items.items():
                 config_data[tokenName] = param.jsonValue
 
             with open(self.config_path, 'w') as f:
@@ -90,23 +93,32 @@ class Config(object):
 
     def _register_mod(self):
         try:
+            config_items = self.configParams.items()
+            enabled_param = config_items.get('enabled')
+            
             template = {
                 'modDisplayName': u'Віджет від Палича',
-                'enabled': self.configParams.enabled.defaultMsaValue,
+                'enabled': enabled_param.defaultValue if enabled_param else True,
                 'column1': [
                     {
                         'type': 'Label',
                         'text': u'Основні налаштування'
-                    }
+                    },
+                     {
+                        'type': 'TextInput',
+                        'text': 'Api Key',
+                        'value': self.params['api_key'].value,
+                        'varName': 'api_key',
+                        'tooltip': u'{HEADER}Ключ{/HEADER}{BODY}Ваш API ключ для передачі даних{/BODY}'
+                    },
                 ],
                 'column2': [
-                            {
-                                'type': 'Label',
-                                'text': u'Додаткові налаштування'
-                            },
-                           
-                        ]
-                    }
+                    {
+                        'type': 'Label',
+                        'text': u'Додаткові налаштування'
+                    },
+                ]
+            }
 
             g_modsSettingsApi.setModTemplate(modLinkage, template, self.on_settings_changed)
             print_debug("[Config] Mod template registered successfully using setModTemplate")
@@ -120,9 +132,11 @@ class Config(object):
         try:
             print_debug("[Config]MSA settings changed: %s" % str(newSettings))
 
+            # Виправлено: отримуємо параметри через метод items()
+            config_items = self.configParams.items()
             for tokenName, value in newSettings.items():
-                if tokenName in self.configParams.items():
-                    param = self.configParams.items()[tokenName]
+                if tokenName in config_items:
+                    param = config_items[tokenName]
                     if hasattr(param, 'fromMsaValue'):
                         param.value = param.fromMsaValue(value)
                     elif hasattr(param, 'msaValue'):
@@ -139,7 +153,6 @@ class Config(object):
 
     def _notify_config_changed(self):
         try:
-
             print_debug("[Config] Config change notification sent")
         except Exception as e:
             print_error("[Config] Error notifying config change: {}".format(str(e)))
@@ -149,4 +162,3 @@ class Config(object):
             print_debug("[Config] MSA sync called - using config file values")
         except Exception as e:
             print_error("[Config] Error in MSA sync: {}".format(str(e)))
-
