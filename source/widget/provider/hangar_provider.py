@@ -5,7 +5,7 @@ from skeletons.gui.shared.utils import IHangarSpace
 from CurrentVehicle import g_currentVehicle
 
 from ..utils import print_error, print_debug, g_statsWrapper
-from ..server_connect import g_serverClient
+from widget import g_serverClient
 
 class HangarProvider(object):
 
