@@ -2,7 +2,7 @@ import BigWorld
 from PlayerEvents import g_playerEvents
 import BattleReplay
 from items import vehicles
-from widget import g_serverClient
+from ..server_connect import g_serverClient
 from ..utils import print_error, print_debug, g_statsWrapper
 
 

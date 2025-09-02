@@ -6,7 +6,7 @@ from constants import  ARENA_PERIOD_NAMES
 from gui.battle_control import avatar_getter
 from items import vehicles
 from helpers.i18n import makeString
-from widget import g_serverClient
+from ..server_connect import g_serverClient
 from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleProvider():

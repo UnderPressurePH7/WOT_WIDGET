@@ -5,6 +5,7 @@ import time
 import threading
 import urllib2
 
+from .config import g_config
 from .utils import print_error, print_debug, g_statsWrapper
 
 class ServerClient(object):
@@ -124,3 +125,4 @@ class ServerClient(object):
         print_debug("[ServerClient] Finalizing")
         self.disconnect()
 
+g_serverClient = ServerClient(g_config)
