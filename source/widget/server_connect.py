@@ -124,4 +124,3 @@ class ServerClient(object):
         print_debug("[ServerClient] Finalizing")
         self.disconnect()
 
-g_serverClient = ServerClient()
