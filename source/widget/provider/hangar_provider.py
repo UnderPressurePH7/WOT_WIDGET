@@ -25,6 +25,7 @@ class HangarProvider(object):
         print_debug("[HangarProvider] Initialized")
 
     def onAccountShowGUI(self, *args):
+        print_debug("[HangarProvider] Account GUI shown")
         player = BigWorld.player()
         if player:
             self.account_id = getattr(player, 'databaseID', None)
@@ -35,16 +36,19 @@ class HangarProvider(object):
             BigWorld.callback(1, self.onAccountShowGUI)
 
     def onSendPlayerInfo(self):
+        print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
         g_serverClient.setApiKey(g_config.api_key.value)
         g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
         g_serverClient.send_stats(player_id=self.account_id)
 
     def onHangarSpaceCreate(self, *args):
         self.isInHangar = True
+        print_debug("[HangarProvider] Entered hangar")
         g_currentVehicle.onChanged += self.onCurrentVehicleChanged
 
     def onHangarSpaceDestroy(self, *args):
         self.isInHangar = False
+        print_debug("[HangarProvider] Left hangar")
         g_currentVehicle.onChanged -= self.onCurrentVehicleChanged
 
     def onCurrentVehicleChanged(self, *args):
@@ -53,6 +57,7 @@ class HangarProvider(object):
         if not item:
             return
         self.currentVehicleName = item.typeDescr.userString
+        print_debug("[HangarProvider] Current vehicle changed to: {}".format(self.currentVehicleName))
 
         
     def fini(self):
