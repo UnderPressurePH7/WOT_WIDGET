@@ -5,12 +5,10 @@ import time
 import threading
 import urllib2
 
-from .config import g_config
 from .utils import print_error, print_debug, g_statsWrapper
 
 class ServerClient(object):
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
         self.base_url = "https://node-websocket-758468a49fee.herokuapp.com"
         self.access_key = None
         self.secret_key = "06032002-Hedebu"
@@ -27,13 +25,10 @@ class ServerClient(object):
                 time.sleep(sleep_time)
             self.last_request_time = time.time()
 
-    def setApiKey(self):
-        if self.config is not None:
-            self.access_key = self.config.api_key.value
-        else:
-            self.access_key = 'dev-test'
+    def setApiKey(self, api_key):
+        self.access_key = api_key
 
-    def send_stats(self, api_key=None, player_id=None):
+    def send_stats(self, player_id=None):
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))
         def async_send():
             try:

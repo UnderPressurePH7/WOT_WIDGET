@@ -5,6 +5,7 @@ from skeletons.gui.shared.utils import IHangarSpace
 from CurrentVehicle import g_currentVehicle
 
 from ..utils import print_error, print_debug, g_statsWrapper
+from ..config import g_config
 from ..server_connect import g_serverClient
 
 class HangarProvider(object):
@@ -34,6 +35,7 @@ class HangarProvider(object):
             BigWorld.callback(1, self.onAccountShowGUI)
 
     def onSendPlayerInfo(self):
+        g_serverClient.setApiKey(g_config.api_key.value)
         g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
         g_serverClient.send_stats(player_id=self.account_id)
 
