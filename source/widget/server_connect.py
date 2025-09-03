@@ -32,7 +32,7 @@ class ServerClient(object):
     def send_stats(self, player_id=None):
         if player_id:
             self.player_id = player_id
-            
+
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))
         def async_send():
             try:
@@ -56,10 +56,10 @@ class ServerClient(object):
                     'X-Secret-Key': self.secret_key,
                     'X-API-Key': self.access_key
                 }
-                
-                if player_id:
-                    headers['X-Player-ID'] = str(player_id)
-                
+
+                if self.player_id:
+                    headers['X-Player-ID'] = str(self.player_id)
+
                 url = "{}/api/server/update-stats".format(self.base_url)
                 
                 req = urllib2.Request(url, data=json_data)
