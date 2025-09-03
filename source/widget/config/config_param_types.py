@@ -39,6 +39,19 @@ def toColorTuple(value):
     return red, green, blue
 
 
+def createTooltip(header=None, body=None, note=None, attention=None):
+    res_str = ''
+    if header is not None:
+        res_str += '{HEADER}%s{/HEADER}' % header
+    if body is not None:
+        res_str += '{BODY}%s{/BODY}' % body
+    if note is not None:
+        res_str += '{NOTE}%s{/NOTE}' % note
+    if attention is not None:
+        res_str += '{ATTENTION}%s{/ATTENTION}' % attention
+    return res_str
+
+
 class Param(object):
 
     def __init__(self, path, defaultValue, disabledValue=None):
@@ -252,8 +265,9 @@ class StepperParam(NumberParam):
 
 class SliderParam(NumberParam):
 
-    def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
+    def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None, format_str='{{value}}'):
         super(SliderParam, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
+        self.format_str = format_str
 
     def renderParam(self, header, body=None, note=None, attention=None):
         return {
@@ -264,7 +278,7 @@ class SliderParam(NumberParam):
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
-            "format": "{{value}}",
+            "format": self.format_str,
             "tooltip": createTooltip(
                 header="%s (Default: %s)" % (header, self.defaultMsaValue),
                 body=body,
@@ -306,6 +320,8 @@ class ColorParam(Param):
         }
 
     def __hexToColor(self, hexColor):
+        if hexColor.startswith('#'):
+            hexColor = hexColor[1:]
         return tuple(int(hexColor[i:i + 2], 16) for i in (0, 2, 4))
 
     def __colorToHex(self, color):
@@ -368,6 +384,26 @@ class OptionsParam(Param):
         }
 
 
+class RadioButtonGroupParam(OptionsParam):
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "RadioButtonGroup",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "options": [
+                {"label": option.displayName} for option in self.options
+            ],
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.getOptionByValue(self.defaultValue).displayName),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
 class TextParam(Param):
 
     def __init__(self, path, defaultValue=u'', disabledValue=None, maxLength=None):
@@ -408,6 +444,94 @@ class TextParam(Param):
         }
 
 
+class HotkeyParam(Param):
+
+    def __init__(self, path, defaultValue=None, disabledValue=None):
+        if defaultValue is None:
+            defaultValue = []
+        super(HotkeyParam, self).__init__(path, defaultValue, disabledValue)
+
+    def toMsaValue(self, value):
+        return value if value else []
+
+    def fromMsaValue(self, msaValue):
+        return msaValue if isinstance(msaValue, list) else []
+
+    def toJsonValue(self, value):
+        return toJson(value if value else [])
+
+    def fromJsonValue(self, jsonValue):
+        return jsonValue if isinstance(jsonValue, list) else []
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "HotKey",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "tooltip": createTooltip(
+                header="%s" % header,
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
+class RangeSliderParam(Param):
+
+    def __init__(self, path, defaultValue, minValue, maxValue, step=1, 
+                 divisionStep=None, minRangeDistance=1, divisionLabelStep=None, 
+                 divisionLabelPostfix='', disabledValue=None):
+        super(RangeSliderParam, self).__init__(path, defaultValue, disabledValue)
+        self.minValue = minValue
+        self.maxValue = maxValue
+        self.step = step
+        self.divisionStep = divisionStep or step
+        self.minRangeDistance = minRangeDistance
+        self.divisionLabelStep = divisionLabelStep or divisionStep
+        self.divisionLabelPostfix = divisionLabelPostfix
+
+    def toMsaValue(self, value):
+        if not isinstance(value, (list, tuple)) or len(value) != 2:
+            return self.defaultValue
+        return [clamp(self.minValue, value[0], self.maxValue), 
+                clamp(self.minValue, value[1], self.maxValue)]
+
+    def fromMsaValue(self, msaValue):
+        if not isinstance(msaValue, (list, tuple)) or len(msaValue) != 2:
+            return self.defaultValue
+        return [clamp(self.minValue, msaValue[0], self.maxValue), 
+                clamp(self.minValue, msaValue[1], self.maxValue)]
+
+    def toJsonValue(self, value):
+        return toJson(self.toMsaValue(value))
+
+    def fromJsonValue(self, jsonValue):
+        return self.fromMsaValue(jsonValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "RangeSlider",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "minimum": self.minValue,
+            "maximum": self.maxValue,
+            "snapInterval": self.step,
+            "divisionStep": self.divisionStep,
+            "minRangeDistance": self.minRangeDistance,
+            "divisionLabelStep": self.divisionLabelStep,
+            "divisionLabelPostfix": self.divisionLabelPostfix,
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, str(self.defaultMsaValue)),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
 class LabelParam(object):
 
     def renderParam(self, header, body=None, note=None, attention=None):
@@ -423,14 +547,15 @@ class LabelParam(object):
         }
 
 
-def createTooltip(header=None, body=None, note=None, attention=None):
-    res_str = ''
-    if header is not None:
-        res_str += '{HEADER}%s{/HEADER}' % header
-    if body is not None:
-        res_str += '{BODY}%s{/BODY}' % body
-    if note is not None:
-        res_str += '{NOTE}%s{/NOTE}' % note
-    if attention is not None:
-        res_str += '{ATTENTION}%s{/ATTENTION}' % attention
-    return res_str
+def createSimpleOptions(labels):
+    options = []
+    for i, label in enumerate(labels):
+        options.append(Option(i, i, unicode(label)))
+    return options
+
+
+def createKeyValueOptions(key_value_dict):
+    options = []
+    for key, label in key_value_dict.items():
+        options.append(Option(key, key, unicode(label)))
+    return options
