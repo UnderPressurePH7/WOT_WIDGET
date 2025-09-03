@@ -17,21 +17,17 @@ modLinkage = 'me.under-pressure.widget'
 
 class Config(object):
     def __init__(self):
+        print_debug("[Config] Initializing configuration")
         self.configParams = ConfigParams()
         self.configTemplate = Template(self.configParams)
         self.configFile = ConfigFile(self.configParams)
         self._loadedSuccessfully = False
         
-        self._load_config()
+        self.configFile.load_config()
         
         if g_modsSettingsApi:
             self._register_mod()
-
-    def _load_config(self):
-        self._loadedSuccessfully = self.configFile.load_config(self.configParams)
-
-    def save_config(self):
-        return self.configFile.save_config(self.configParams)
+            
 
     def _register_mod(self):
         if not g_modsSettingsApi:
@@ -79,7 +75,7 @@ class Config(object):
                         print_error("[Config] Error applying MSA setting {} = {}: {}".format(
                             param_name, value, str(e)))
             
-            self.save_config()
+            self.configFile.save_config()
             print_debug("[Config] Applied settings from MSA")
             
         except Exception as e:
@@ -105,8 +101,8 @@ class Config(object):
                     except Exception as e:
                         print_error("[Config] Error setting parameter {} to {}: {}".format(
                             tokenName, value, str(e)))
-            
-            self.save_config()
+
+            self.configFile.save_config()
             self._notify_config_changed()
             print_debug("[Config] Settings updated successfully")
             
@@ -148,7 +144,8 @@ class Config(object):
 
     def restore_config(self):
         if self.configFile.restore_config():
-            self._load_config()
+            self.configFile.load_config()
+
             return True
         return False
 
