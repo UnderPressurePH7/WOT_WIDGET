@@ -17,7 +17,7 @@ class ConfigFile(object):
                 print_debug("[ConfigFile] Created config directory")
 
             if not os.path.exists(self.config_path):
-                self._create_default_config(self.config_params)
+                self._create_default_config()
         except Exception as e:
             print_error("[ConfigFile] Error ensuring config exists: {}".format(str(e)))
 
