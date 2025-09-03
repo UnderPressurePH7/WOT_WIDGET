@@ -86,10 +86,13 @@ class Config(object):
     def on_settings_changed(self, linkage, newSettings):
         if linkage != modLinkage:
             return
-            
+        self.reload_safely()
+
         if not self._loadedSuccessfully:
             print_error("[Config] Settings change cancelled - config not loaded properly")
-            return
+            self.configFile.load_config()
+            if not self._loadedSuccessfully:
+                return
             
         try:
             print_debug("[Config] MSA settings changed: {}".format(str(newSettings)))
@@ -124,7 +127,7 @@ class Config(object):
 
     def reload_safely(self):
         try:
-            self._loadedSuccessfully = self.configFile.load_config(self.configParams)
+            self._loadedSuccessfully = self.configFile.load_config()
         except Exception as e:
             print_error("[Config] Error reloading config: {}".format(str(e)))
 

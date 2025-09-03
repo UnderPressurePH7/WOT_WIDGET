@@ -56,8 +56,11 @@ class ConfigFile(object):
                 print_debug("[ConfigFile] Config loaded successfully")
                 return True
             else:
-                print_debug("[ConfigFile] Config file not found, using defaults")
-                return False
+                config_items = self.config_params.items()
+                for tokenName, param in config_items.items():
+                    param.value = param.defaultValue
+                print_debug("[ConfigFile] Config file not found, using defaults - still successful")
+                return True 
                 
         except Exception as e:
             print_error("[ConfigFile] Error loading config: {}".format(str(e)))
