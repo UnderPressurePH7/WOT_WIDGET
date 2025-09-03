@@ -36,7 +36,7 @@ class ConfigFile(object):
 
     def load_config(self):
         try:
-            self._ensure_config_exists(self.config_params)
+            self._ensure_config_exists()
             
             if os.path.exists(self.config_path):
                 with open(self.config_path, 'r') as f:

@@ -49,6 +49,8 @@ class Config(object):
 
             template = self.configTemplate.generateTemplate()  
 
+            print_debug("[Config] Template = {}".format(template))
+            
             settings = g_modsSettingsApi.setModTemplate(
                 modLinkage, 
                 template, 

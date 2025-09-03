@@ -212,7 +212,7 @@ class TranslationList(TranslationBase):
 
 
 class Translator(object):
-    MODNAME = TranslationElement("modname")
+    MOD_NAME = TranslationElement("modname")
     CHECKED = TranslationElement("checked")
     UNCHECKED = TranslationElement("unchecked")
     DEFAULT_VALUE = TranslationElement("defaultValue")
