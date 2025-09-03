@@ -37,9 +37,9 @@ class Config(object):
         try:
             self.configTemplate.set_mod_display_name(Translator.MOD_NAME)
             
-            self.configTemplate.add_to_column1(
-                LabelParameter().renderParam(Translator.MAIN_LABEL)
-            )
+            # self.configTemplate.add_to_column1(
+            #     LabelParameter().renderParam(Translator.MAIN_LABEL)
+            # )
 
             self.configTemplate.add_parameter_to_column1(
                 "tournamentType",
@@ -54,7 +54,7 @@ class Config(object):
             )
 
             self.configTemplate.add_to_column2(
-                LabelParameter().renderParam(Translator.BATTLE_BLOGGERS_LABEL)
+                LabelParameter().renderParam(header=Translator.BATTLE_BLOGGERS_LABEL, body=Translator.BATTLE_BLOGGERS_BODY)
             )
 
             self.configTemplate.add_parameter_to_column2(

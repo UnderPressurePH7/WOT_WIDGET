@@ -226,6 +226,7 @@ class Translator(object):
     TOURNAMENT_TYPE_OPTION_PLATOON = TranslationElement("tournamentType.option.platoon")
     TOURNAMENT_TYPE_OPTION_BB = TranslationElement("tournamentType.option.BB")
     BATTLE_BLOGGERS_LABEL = TranslationElement("battleBloggers.label")
+    BATTLE_BLOGGERS_BODY = TranslationElement("battleBloggers.body")
     CHOOSE_BLOGGER_HEADER = TranslationElement("chooseBlogger.header")
     CHOOSE_BLOGGER_BODY = TranslationElement("chooseBlogger.body")
     BLOGGER_PALU4 = TranslationElement("blogger.Palu4")

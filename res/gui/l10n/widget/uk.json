@@ -13,6 +13,7 @@
     "tournamentType.option.platoon": "Взводний турнір",
     "tournamentType.option.BB": "Битва Блогерів",
     "battleBloggers.label": "Налаштування битви Блогерів ",
+    "battleBloggers.body": "Доступно при вибору типу Битва Блогерів",
     "chooseBlogger.header": "Виберіть блогера",
     "chooseBlogger.body": "Виберіть блогера для участі в турнірі",
     "blogger.Palu4": "Магістр Палич",

@@ -13,6 +13,7 @@
     "tournamentType.option.platoon": "Squad tournament",
     "tournamentType.option.BB": "The Battle of Bloggers",
     "battleBloggers.label": "Battle Bloggers Settings",
+    "battleBloggers.body": "Available when selecting the Battle of Bloggers type",
     "chooseBlogger.header": "Choose a Blogger",
     "chooseBlogger.body": "Select a blogger to participate in the tournament",
     "blogger.Palu4": "Palych",
