@@ -9,6 +9,7 @@ from .utils import print_error, print_debug, g_statsWrapper
 
 class ServerClient(object):
     def __init__(self):
+        self.player_id = None
         self.base_url = "https://node-websocket-758468a49fee.herokuapp.com"
         self.access_key = None
         self.secret_key = "06032002-Hedebu"
@@ -29,6 +30,9 @@ class ServerClient(object):
         self.access_key = api_key
 
     def send_stats(self, player_id=None):
+        if player_id:
+            self.player_id = player_id
+            
         print_debug("[ServerClient] Queuing stats send for player ID: {}".format(player_id))
         def async_send():
             try:
