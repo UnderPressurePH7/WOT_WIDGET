@@ -6,5 +6,10 @@
     "mainLabel": "Основні налаштування",
     "apiKey": "Ключ доступу",
     "apiKey.header": "API Ключ",
-    "apiKey.body": "Ваш API ключ для передачі даних на сервер"
+    "apiKey.body": "Ваш API ключ для передачі даних на сервер",
+    "tournamentType": "Тип турніру",
+    "tournamentType.header": "Тип турніру",
+    "tournamentType.body": "Виберіть тип турніру",
+    "tournamentType.option.platoon": "Взводний турнір",
+    "tournamentType.option.solo": "Битва Блогерів"
 }

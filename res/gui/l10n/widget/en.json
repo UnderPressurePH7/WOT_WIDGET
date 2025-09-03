@@ -6,5 +6,7 @@
     "mainLabel": "Main settings",
     "apiKey": "Access key",
     "apiKey.header": "API Key",
-    "apiKey.body": "Your API key for transferring data to the server"
+    "apiKey.body": "Your API key for transferring data to the server",
+    "tournamentType.option.platoon": "Squad tournament",
+    "tournamentType.option.solo": "The Battle of Bloggers"
 }

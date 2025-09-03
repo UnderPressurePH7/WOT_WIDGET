@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
-from .config_param_types import CheckboxParameter, TextInputParameter
-
+from .config_param_types import CheckboxParameter, TextInputParameter, RadioButtonGroupParameter
+from .translations import Translator
 
 class ConfigParams(object):    
     def __init__(self):
         self.enabled = CheckboxParameter(
             ['enabled'], 
             defaultValue=True
+        )
+
+        self.tournamentType = RadioButtonGroupParameter(
+            ['tournamentType'],
+            defaultValue='platoon',
+            options=[
+                (u'platoon', Translator.tournamentType.option.platoon),
+                (u'solo', Translator.tournamentType.option.solo)
+            ]
         )
 
         self.apiKey = TextInputParameter(

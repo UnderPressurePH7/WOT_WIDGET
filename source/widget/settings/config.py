@@ -40,12 +40,20 @@ class Config(object):
             self.configTemplate.add_to_column1(
                 LabelParameter().renderParam(Translator.MAIN_LABEL)
             )
+
+            self.configTemplate.add_parameter_to_column1(
+                "tournamentType",
+                header=Translator.TOURNAMENT_TYPE_HEADER,
+                body=Translator.TOURNAMENT_TYPE_BODY
+            )
             
             self.configTemplate.add_parameter_to_column1(
                 "apiKey",
                 header=Translator.API_KEY_HEADER,
                 body=Translator.API_KEY_BODY
             )
+
+
 
             template = self.configTemplate.generateTemplate()  
 

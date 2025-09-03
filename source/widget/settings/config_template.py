@@ -23,7 +23,7 @@ class Template(object):
         if isinstance(item, dict):
             self.column2_items.append(item)
         return self
-    
+
     def add_parameter_to_column1(self, param_name, header=None, body=None, note=None, attention=None):
         if hasattr(self.config_params, param_name):
             param = getattr(self.config_params, param_name)
@@ -36,7 +36,7 @@ class Template(object):
                 )
                 self.add_to_column1(rendered_param)
         return self
-    
+
     def add_parameter_to_column2(self, param_name, header=None, body=None, note=None, attention=None):
         if hasattr(self.config_params, param_name):
             param = getattr(self.config_params, param_name)

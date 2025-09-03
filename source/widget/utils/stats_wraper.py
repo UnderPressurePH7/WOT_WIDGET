@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 class StatsWrapper(object):
     
     def __init__(self, data=None):
