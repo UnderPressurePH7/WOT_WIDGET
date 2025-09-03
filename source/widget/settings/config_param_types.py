@@ -1,5 +1,5 @@
 import logging
-
+from .translations import Translator
 from ..utils import print_error, print_debug
 
 PARAM_REGISTRY = {}
@@ -166,7 +166,7 @@ class CheckboxParameter(BaseParameter):
             "varName": self.tokenName,
             "value": self.defaultMsaValue,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, u"Увімкнено" if self.defaultValue else u"Вимкнено"),
+                header=="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
                 body=body,
                 note=note,
                 attention=attention

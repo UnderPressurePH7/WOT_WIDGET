@@ -4,6 +4,7 @@ from .config_file import ConfigFile
 
 from .config_param import ConfigParams
 from .config_template import Template
+from .translations import Translator
 
 from ..utils import print_error, print_debug
 try:
@@ -38,22 +39,16 @@ class Config(object):
             return
             
         try:
-            self.configTemplate.set_mod_display_name(u"Віджет від Палича")
+            self.configTemplate.set_mod_display_name(Translator.MOD_NAME)
             
             self.configTemplate.add_to_column1(
-                LabelParameter().renderParam(u'Основні налаштування')
+                LabelParameter().renderParam(Translator.MAIN_LABEL)
             )
             
             self.configTemplate.add_parameter_to_column1(
-                "enabled", 
-                header=u"Увімкнути мод",
-                body=u"Увімкнути або вимкнути мод"
-            )
-            
-            self.configTemplate.add_parameter_to_column1(
-                "apiKey", 
-                header=u"API Ключ",
-                body=u"Ваш API ключ для передачі даних на сервер"
+                "apiKey",
+                header=Translator.API_KEY_HEADER,
+                body=Translator.API_KEY_BODY
             )
 
             template = self.configTemplate.generateTemplate()  

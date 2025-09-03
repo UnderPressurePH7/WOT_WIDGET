@@ -5,15 +5,12 @@ from helpers import getClientLanguage
 
 from ..utils import print_error, print_debug
 
-DEFAULT_FILE_LANGUAGE = ResMgr.openSection("gui\l10n\widget\{}.json".format("en"))
-
-
 DEFAULT_TRANSLATIONS_MAP = {}
 TRANSLATIONS_MAP = {}
 
 
 def loadTranslations():
-    defaultTranslationsMap = _loadLanguageFile("uk")
+    defaultTranslationsMap = _loadLanguageFile("en")
 
     global DEFAULT_TRANSLATIONS_MAP
     DEFAULT_TRANSLATIONS_MAP = defaultTranslationsMap if defaultTranslationsMap is not None else {}
@@ -32,10 +29,10 @@ def loadTranslations():
 
 
 def _loadLanguageFile(language):
-    global DEFAULT_FILE_LANGUAGE
     translationsRes = ResMgr.openSection("gui\l10n\widget\{}.json".format(language))
     if translationsRes is None:
-        return DEFAULT_FILE_LANGUAGE
+        print_debug("Failed to load translations for language {}".format(language))
+        return None
 
     translationsStr = str(translationsRes.asBinary)
     return json.loads(translationsStr, encoding="UTF-8")
