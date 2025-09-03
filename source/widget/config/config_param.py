@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
-from .config_param_types import PARAM_REGISTRY, Param
+from .config_param_types import PARAM_REGISTRY, Param, BooleanParam, TextParam
 
 
-class ConfigParams(object):
-    
+class ConfigParams(object):    
     def __init__(self):
-        self.enabled = Param(['enabled'], defaultValue=True)
-        self.api_key = Param(['apiKey'], defaultValue=u'dev-test')
+        self.enabled = BooleanParam(
+            ['enabled'], 
+            defaultValue=True
+        )
+        
+        self.apiKey = TextParam(
+            ['apiKey'], 
+            defaultValue=u'dev-test',
+            maxLength=100
+        )
 
     def items(self):
         result = {}

@@ -1,18 +1,60 @@
-# -*- coding: utf-8 -*-
-import Keys
+import logging
+
 from ..utils import print_error, print_debug
 
 PARAM_REGISTRY = {}
 
+
+def toJson(obj):
+    import json
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def toBool(value):
+    return str(value).lower() == "true"
+
+
+def toPositiveFloat(value):
+    floatValue = float(value)
+    return floatValue if floatValue > 0.0 else 0.0
+
+
+def clamp(minValue, value, maxValue):
+    if minValue is not None:
+        value = max(minValue, value)
+    if maxValue is not None:
+        value = min(value, maxValue)
+    return value
+
+
+def toColorTuple(value):
+    if len(value) != 3:
+        raise Exception("Provided color array does not have exactly 3 elements.")
+    rawRed = int(value[0])
+    rawGreen = int(value[1])
+    rawBlue = int(value[2])
+    red = clamp(0, rawRed, 255)
+    green = clamp(0, rawGreen, 255)
+    blue = clamp(0, rawBlue, 255)
+    return red, green, blue
+
+
 class Param(object):
+
     def __init__(self, path, defaultValue, disabledValue=None):
         self.name = path[-1]
         self.path = path
         self.tokenName = "-".join(self.path)
+
         self.value = defaultValue
         self.defaultValue = defaultValue
         self.disabledValue = disabledValue if disabledValue is not None else defaultValue
+
         PARAM_REGISTRY[self.tokenName] = self
+
+    def readValueFromConfigDictSafely(self, configDict):
+        value = self.readValueFromConfigDict(configDict)
+        return value if value is not None else self.defaultValue
 
     def readValueFromConfigDict(self, configDict):
         readValue = None
@@ -21,11 +63,20 @@ class Param(object):
         for pathSegment in self.path:
             if pathSegment not in prevConfigSection:
                 return None
+
             dictSection = prevConfigSection[pathSegment]
+
             readValue = dictSection
             prevConfigSection = dictSection
 
         return readValue
+
+    def __call__(self):
+        from ..config import g_config
+        if hasattr(g_config, 'configParams') and hasattr(g_config.configParams, 'enabled'):
+            if not g_config.configParams.enabled.value:
+                return self.disabledValue
+        return self.value
 
     @property
     def jsonValue(self):
@@ -36,11 +87,8 @@ class Param(object):
         try:
             self.value = self.fromJsonValue(jsonValue)
         except Exception as e:
-            print_error("[Param] Error occurred while saving parameter %s with jsonValue %s, fallback to previous valid value: %s" % (self.tokenName, jsonValue, str(e)))
-
-    @property
-    def defaultMsaValue(self):
-        return self.toMsaValue(self.defaultValue)
+            print_error("Error occurred while saving parameter %s with jsonValue %s, "
+                        "fallback to previous valid value: %s" % (self.tokenName, jsonValue, str(e)))
 
     @property
     def msaValue(self):
@@ -51,7 +99,40 @@ class Param(object):
         try:
             self.value = self.fromMsaValue(msaValue)
         except Exception as e:
-            print_error("[Param] Error occurred while saving parameter %s with msaValue %s, fallback to previous valid value: %s" % (self.tokenName, msaValue, str(e)))
+            print_error("Error occurred while saving parameter %s with msaValue %s, "
+                        "fallback to previous valid value: %s" % (self.tokenName, msaValue, str(e)))
+
+    @property
+    def defaultMsaValue(self):
+        return self.toMsaValue(self.defaultValue)
+
+    @property
+    def defaultJsonValue(self):
+        return self.toJsonValue(self.defaultValue)
+
+    def toMsaValue(self, value):
+        raise NotImplementedError()
+
+    def fromMsaValue(self, msaValue):
+        raise NotImplementedError()
+
+    def toJsonValue(self, value):
+        raise NotImplementedError()
+
+    def fromJsonValue(self, jsonValue):
+        raise NotImplementedError()
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return self.tokenName
+
+
+class BooleanParam(Param):
+
+    def __init__(self, path, defaultValue=None, disabledValue=None):
+        super(BooleanParam, self).__init__(path, defaultValue, disabledValue)
 
     def toMsaValue(self, value):
         return value
@@ -60,10 +141,296 @@ class Param(object):
         return msaValue
 
     def toJsonValue(self, value):
-        return value
+        return toJson(value)
 
     def fromJsonValue(self, jsonValue):
-        return jsonValue
+        return toBool(jsonValue)
 
-    def validate(self, value):
-        return True
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "CheckBox",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, u"Увімкнено" if self.defaultValue else u"Вимкнено"),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
+class NumberParam(Param):
+
+    def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
+        super(NumberParam, self).__init__(path, defaultValue, disabledValue)
+        self.castFunction = castFunction
+        self.minValue = minValue
+        self.step = step
+        self.maxValue = maxValue
+
+    def toMsaValue(self, value):
+        return clamp(self.minValue, value, self.maxValue)
+
+    def fromMsaValue(self, msaValue):
+        return clamp(self.minValue, msaValue, self.maxValue)
+
+    def toJsonValue(self, value):
+        return toJson(clamp(self.minValue, value, self.maxValue))
+
+    def fromJsonValue(self, jsonValue):
+        value = self.castFunction(jsonValue)
+        return clamp(self.minValue, value, self.maxValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        raise NotImplementedError()
+
+
+class FloatTextParam(Param):
+
+    def __init__(self, path, minValue, maxValue, defaultValue, disabledValue=None):
+        super(FloatTextParam, self).__init__(path, defaultValue, disabledValue)
+        self.minValue = minValue
+        self.maxValue = maxValue
+
+    def toMsaValue(self, value):
+        return "%.4f" % (clamp(self.minValue, value, self.maxValue))
+
+    def fromMsaValue(self, msaValue):
+        floatValue = float(msaValue.replace(",", "."))
+        return clamp(self.minValue, floatValue, self.maxValue)
+
+    def toJsonValue(self, value):
+        clampedValue = clamp(self.minValue, value, self.maxValue)
+        return toJson(clampedValue)
+
+    def fromJsonValue(self, jsonValue):
+        rawValue = float(jsonValue)
+        return clamp(self.minValue, rawValue, self.maxValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "TextInput",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                body=body,
+                note=note,
+                attention=attention
+            ),
+            "width": 200
+        }
+
+
+class StepperParam(NumberParam):
+
+    def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
+        super(StepperParam, self).__init__(path, castFunction,
+                                           minValue, step, maxValue,
+                                           defaultValue, disabledValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "NumericStepper",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "minimum": self.minValue,
+            "maximum": self.maxValue,
+            "snapInterval": self.step,
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
+class SliderParam(NumberParam):
+
+    def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
+        super(SliderParam, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "Slider",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "minimum": self.minValue,
+            "maximum": self.maxValue,
+            "snapInterval": self.step,
+            "format": "{{value}}",
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
+class ColorParam(Param):
+
+    def __init__(self, path, defaultValue=None, disabledValue=None):
+        super(ColorParam, self).__init__(path, defaultValue, disabledValue)
+
+    def toMsaValue(self, value):
+        return self.__colorToHex(value)
+
+    def fromMsaValue(self, msaValue):
+        return self.__hexToColor(msaValue)
+
+    def toJsonValue(self, value):
+        return toJson(value)
+
+    def fromJsonValue(self, jsonValue):
+        return toColorTuple(jsonValue)
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "ColorChoice",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "tooltip": createTooltip(
+                header="%s (Default: #%s)" % (header, self.defaultMsaValue),
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+    def __hexToColor(self, hexColor):
+        return tuple(int(hexColor[i:i + 2], 16) for i in (0, 2, 4))
+
+    def __colorToHex(self, color):
+        return ("%02x%02x%02x" % color).upper()
+
+
+class Option(object):
+
+    def __init__(self, value, msaValue, displayName):
+        self.value = value
+        self.msaValue = msaValue
+        self.displayName = displayName
+
+
+class OptionsParam(Param):
+
+    def __init__(self, path, options, defaultValue, disabledValue=None):
+        super(OptionsParam, self).__init__(path, defaultValue, disabledValue)
+        self.options = options
+
+    def toMsaValue(self, value):
+        return self.getOptionByValue(value).msaValue
+
+    def fromMsaValue(self, msaValue):
+        return self.getOptionByMsaValue(msaValue).value
+
+    def toJsonValue(self, value):
+        return toJson(value)
+
+    def fromJsonValue(self, jsonValue):
+        option = self.getOptionByValue(jsonValue)
+        if option is None:
+            raise Exception("Invalid value %s for config param %s" % (jsonValue, self.tokenName))
+        return option.value
+
+    def getOptionByValue(self, value):
+        foundOptions = filter(lambda option: option.value == value, self.options)
+        return foundOptions[0] if len(foundOptions) > 0 else None
+
+    def getOptionByMsaValue(self, msaValue):
+        foundOptions = filter(lambda option: option.msaValue == msaValue, self.options)
+        return foundOptions[0] if len(foundOptions) > 0 else None
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "Dropdown",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "options": [
+                {"label": option.displayName} for option in self.options
+            ],
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.getOptionByValue(self.defaultValue).displayName),
+                body=body,
+                note=note,
+                attention=attention
+            ),
+            "width": 200
+        }
+
+
+class TextParam(Param):
+
+    def __init__(self, path, defaultValue=u'', disabledValue=None, maxLength=None):
+        super(TextParam, self).__init__(path, defaultValue, disabledValue)
+        self.maxLength = maxLength
+
+    def toMsaValue(self, value):
+        return unicode(value) if value is not None else u''
+
+    def fromMsaValue(self, msaValue):
+        value = unicode(msaValue) if msaValue is not None else u''
+        if self.maxLength and len(value) > self.maxLength:
+            value = value[:self.maxLength]
+        return value
+
+    def toJsonValue(self, value):
+        return toJson(unicode(value) if value is not None else u'')
+
+    def fromJsonValue(self, jsonValue):
+        value = unicode(jsonValue) if jsonValue is not None else u''
+        if self.maxLength and len(value) > self.maxLength:
+            value = value[:self.maxLength]
+        return value
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            "type": "TextInput",
+            "text": header,
+            "varName": self.tokenName,
+            "value": self.defaultMsaValue,
+            "tooltip": createTooltip(
+                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                body=body,
+                note=note,
+                attention=attention
+            ),
+            "width": 200
+        }
+
+
+class LabelParam(object):
+
+    def renderParam(self, header, body=None, note=None, attention=None):
+        return {
+            'type': 'Label',
+            'text': header,
+            "tooltip": createTooltip(
+                header=header,
+                body=body,
+                note=note,
+                attention=attention
+            )
+        }
+
+
+def createTooltip(header=None, body=None, note=None, attention=None):
+    res_str = ''
+    if header is not None:
+        res_str += '{HEADER}%s{/HEADER}' % header
+    if body is not None:
+        res_str += '{BODY}%s{/BODY}' % body
+    if note is not None:
+        res_str += '{NOTE}%s{/NOTE}' % note
+    if attention is not None:
+        res_str += '{ATTENTION}%s{/ATTENTION}' % attention
+    return res_str
