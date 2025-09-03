@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import json
-import os
-from .config_param_types import LabelParam
+from .config_param_types import LabelParameter
+from .config_file import ConfigFile
 from ..utils import print_error, print_debug
-
+from .config_param import ConfigParams
+from .config_template import Template
 try:
     from gui.modsSettingsApi import g_modsSettingsApi   
 except ImportError:
@@ -13,81 +13,22 @@ except ImportError:
 modLinkage = 'me.under-pressure.widget'
 
 class Config(object):
-    def __init__(self, configParams, configTemplate):
-        self.configParams = configParams
-        self.configTemplate = configTemplate
-        self.config_path = os.path.join('mods', 'configs', 'under_pressure', 'widget.json')
+    def __init__(self):
+        self.configParams = ConfigParams()
+        self.configTemplate = Template(self.configParams)
+        self.configFile = ConfigFile(self.configParams)
         self._loadedSuccessfully = False
         
-        self._ensure_config_exists()
-        self.load_config()
+        self._load_config()
         
         if g_modsSettingsApi:
             self._register_mod()
 
-    def _ensure_config_exists(self):
-        try:
-            config_dir = os.path.dirname(self.config_path)
-            if not os.path.exists(config_dir):
-                os.makedirs(config_dir)
-                print_debug("[Config] Created config directory")
-
-            if not os.path.exists(self.config_path):
-                self._create_default_config()
-        except Exception as e:
-            print_error("[Config] Error ensuring config exists: {}".format(str(e)))
-
-    def _create_default_config(self):
-        try:
-            config_data = {}
-            config_items = self.configParams.items()
-            for tokenName, param in config_items.items():
-                config_data[tokenName] = param.fromJsonValue(param.defaultJsonValue)
-
-            with open(self.config_path, 'w') as f:
-                json.dump(config_data, f, indent=4, ensure_ascii=False)
-            print_debug("[Config] Created default config file")
-        except Exception as e:
-            print_error("[Config] Error creating default config: {}".format(str(e)))
-
-    def load_config(self):
-        try:
-            if os.path.exists(self.config_path):
-                with open(self.config_path, 'r') as f:
-                    config_data = json.load(f)
-
-                config_items = self.configParams.items()
-                for tokenName, param in config_items.items():
-                    if tokenName in config_data:
-                        try:
-                            param.jsonValue = config_data[tokenName]
-                        except Exception as e:
-                            print_error("[Config] Error loading parameter {}: {}".format(tokenName, str(e)))
-                            param.value = param.defaultValue
-                    else:
-                        param.value = param.defaultValue
-
-                self._loadedSuccessfully = True
-                print_debug("[Config] loaded successfully")
-            else:
-                print_debug("[Config] file not found, using defaults")
-                self._loadedSuccessfully = False
-        except Exception as e:
-            print_error("[Config] Error loading config: {}".format(str(e)))
-            self._loadedSuccessfully = False
+    def _load_config(self):
+        self._loadedSuccessfully = self.configFile.load_config(self.configParams)
 
     def save_config(self):
-        try:
-            config_data = {}
-            config_items = self.configParams.items()
-            for tokenName, param in config_items.items():
-                config_data[tokenName] = param.fromJsonValue(param.jsonValue)
-
-            with open(self.config_path, 'w') as f:
-                json.dump(config_data, f, indent=4, ensure_ascii=False)
-            print_debug("[Config] saved successfully")
-        except Exception as e:
-            print_error("[Config] Error saving config: {}".format(str(e)))
+        return self.configFile.save_config(self.configParams)
 
     def _register_mod(self):
         if not g_modsSettingsApi:
@@ -98,7 +39,7 @@ class Config(object):
             self.configTemplate.set_mod_display_name(u"Віджет від Палича")
             
             self.configTemplate.add_to_column1(
-                LabelParam().renderParam(u'Основні налаштування')
+                LabelParameter().renderParam(u'Основні налаштування')
             )
             
             self.configTemplate.add_parameter_to_column1(
@@ -188,7 +129,7 @@ class Config(object):
 
     def reload_safely(self):
         try:
-            self.load_config()
+            self._loadedSuccessfully = self.configFile.load_config(self.configParams)
         except Exception as e:
             print_error("[Config] Error reloading config: {}".format(str(e)))
 
@@ -204,3 +145,15 @@ class Config(object):
                 print_debug("[Config] Synchronized with MSA")
         except Exception as e:
             print_error("[Config] Error in MSA sync: {}".format(str(e)))
+
+    def backup_config(self):
+        return self.configFile.backup_config()
+
+    def restore_config(self):
+        if self.configFile.restore_config():
+            self._load_config()
+            return True
+        return False
+
+    def config_exists(self):
+        return self.configFile.config_exists()
