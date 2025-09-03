@@ -3,7 +3,7 @@
     "checked": "ввімкнений",
     "unchecked": "вимкнений",
     "defaultValue": "за замовчуванням",
-    "mainLabel": "Основні налаштування",
+    "main.label": "Основні налаштування",
     "apiKey": "Ключ доступу",
     "apiKey.header": "API Ключ",
     "apiKey.body": "Ваш API ключ для передачі даних на сервер",
@@ -11,5 +11,12 @@
     "tournamentType.header": "Тип турніру",
     "tournamentType.body": "Виберіть тип турніру",
     "tournamentType.option.platoon": "Взводний турнір",
-    "tournamentType.option.solo": "Битва Блогерів"
+    "tournamentType.option.BB": "Битва Блогерів",
+    "battleBloggers.label": "налаштування битви Блогерів ",
+    "chooseBlogger.header": "Виберіть блогера",
+    "chooseBlogger.body": "Виберіть блогера для участі в турнірі",
+    "blogger.Palu4": "Магістр Палич",
+    "blogger.Vgosti": "Vgosti",
+    "blogger.YKP_BOIH": "YKP_BOIH",
+    "blogger.Bizzord": "Bizzord"
 }

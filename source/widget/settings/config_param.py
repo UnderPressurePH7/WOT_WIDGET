@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .config_param_types import CheckboxParameter, TextInputParameter, RadioButtonGroupParameter, OptionItem
+from .config_param_types import CheckboxParameter, TextInputParameter, DropdownParameter, RadioButtonGroupParameter, OptionItem
 from .translations import Translator
 
 class ConfigParams(object):    
@@ -14,7 +14,7 @@ class ConfigParams(object):
             defaultValue='platoon',
             options=[
                 OptionItem('platoon', 'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
-                OptionItem('solo', 'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
+                OptionItem('BB', 'BB', Translator.TOURNAMENT_TYPE_OPTION_BB)
             ]
 )
 
@@ -23,6 +23,18 @@ class ConfigParams(object):
             defaultValue=u'dev-test',
             maxLength=10
         )
+
+        self.chooseBlogger = DropdownParameter(
+            ['chooseBlogger'],
+            defaultValue='Palu4',
+            options=[
+                OptionItem('Palu4', 'Palu4', Translator.BLOGGER_PALU4),
+                OptionItem('Vgosti', 'Vgosti', Translator.BLOGGER_VGOSTI),
+                OptionItem('YKP_BOIH', 'YKP_BOIH', Translator.BLOGGER_YKP_BOIH),
+                OptionItem('Bizzord', 'Bizzord', Translator.BLOGGER_BIZZORD)
+            ]
+        )
+
 
     def items(self):
         result = {}

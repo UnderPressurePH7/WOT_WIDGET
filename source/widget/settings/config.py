@@ -53,7 +53,15 @@ class Config(object):
                 body=Translator.API_KEY_BODY
             )
 
+            self.configTemplate.add_to_column2(
+                LabelParameter().renderParam(Translator.BATTLE_BLOGGERS_LABEL)
+            )
 
+            self.configTemplate.add_parameter_to_column2(
+                "chooseBlogger",
+                header=Translator.CHOOSE_BLOGGER_HEADER,
+                body=Translator.CHOOSE_BLOGGER_BODY
+            )
 
             template = self.configTemplate.generateTemplate()  
 
