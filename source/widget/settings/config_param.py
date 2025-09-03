@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .config_param_types import PARAM_REGISTRY, BaseParameter, CheckboxParameter, TextInputParameter
+from .config_param_types import CheckboxParameter, TextInputParameter
 
 
 class ConfigParams(object):    
@@ -18,12 +18,11 @@ class ConfigParams(object):
     def items(self):
         result = {}
         for attr_name in dir(self):
-            if not attr_name.startswith('_') and not callable(getattr(self, attr_name)):
-                attr = getattr(self, attr_name)
-                if isinstance(attr, BaseParameter):
-                    result[attr.tokenName] = attr
+            if not attr_name.startswith('_') and attr_name != 'items':
+                try:
+                    attr = getattr(self, attr_name)
+                    if hasattr(attr, 'tokenName') and hasattr(attr, 'defaultValue'):
+                        result[attr.tokenName] = attr
+                except Exception:
+                    continue
         return result
-
-    @staticmethod
-    def get_registry():
-        return PARAM_REGISTRY

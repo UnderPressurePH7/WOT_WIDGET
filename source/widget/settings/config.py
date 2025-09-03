@@ -23,7 +23,7 @@ class Config(object):
         self.configFile = ConfigFile(self.configParams)
         self._loadedSuccessfully = False
         
-        self.configFile.load_config()
+        self._loadConfigFileToParams()
         
         if g_modsSettingsApi:
             self._register_mod()
@@ -86,11 +86,10 @@ class Config(object):
     def on_settings_changed(self, linkage, newSettings):
         if linkage != modLinkage:
             return
-        self.reload_safely()
 
         if not self._loadedSuccessfully:
             print_error("[Config] Settings change cancelled - config not loaded properly")
-            self.configFile.load_config()
+            self._loadConfigFileToParams()
             if not self._loadedSuccessfully:
                 return
             
@@ -125,9 +124,36 @@ class Config(object):
         except Exception as e:
             print_error("[Config] Error notifying config change: {}".format(str(e)))
 
-    def reload_safely(self):
+    def _loadConfigFileToParams(self):
+        print_debug("[Config] Starting config loading ...")
+        self._loadedSuccessfully = False
+
         try:
-            self._loadedSuccessfully = self.configFile.load_config()
+            success = self.configFile.load_config()
+            if success:
+                self._loadedSuccessfully = True
+                print_debug("[Config] Finished config loading.")
+            else:
+                print_error("[Config] Config loading failed, using defaults")
+            
+            if not self.configFile.exists():
+                print_debug("[Config] Config file doesn't exist, creating it")
+                self.configFile.save_config()
+                
+        except Exception as e:
+            print_error("[Config] Failed to load config: {}".format(str(e)))
+            config_items = self.configParams.items()
+            for tokenName, param in config_items.items():
+                param.value = param.defaultValue
+
+    def reloadSafely(self):
+        try:
+            self._loadConfigFileToParams()
+
+            from ..server_connect import g_serverClient
+            if hasattr(self, 'configParams') and hasattr(self.configParams, 'apiKey'):
+                g_serverClient.setApiKey(self.configParams.apiKey.value)
+
         except Exception as e:
             print_error("[Config] Error reloading config: {}".format(str(e)))
 
@@ -149,7 +175,6 @@ class Config(object):
 
     def restore_config(self):
         if self.configFile.restore_config():
-            self.configFile.load_config()
-
+            self._loadConfigFileToParams()
             return True
         return False
