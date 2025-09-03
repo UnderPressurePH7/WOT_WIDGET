@@ -229,7 +229,7 @@ class FloatTextInputParameter(BaseParameter):
             "varName": self.tokenName,
             "value": self.defaultMsaValue,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
                 note=note,
                 attention=attention
@@ -255,7 +255,7 @@ class StepperParameter(NumericParameter):
             "maximum": self.maxValue,
             "snapInterval": self.step,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
                 note=note,
                 attention=attention
@@ -280,7 +280,7 @@ class SliderParameter(NumericParameter):
             "snapInterval": self.step,
             "format": self.format_str,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
                 note=note,
                 attention=attention
@@ -312,7 +312,7 @@ class ColorParameter(BaseParameter):
             "varName": self.tokenName,
             "value": self.defaultMsaValue,
             "tooltip": createTooltip(
-                header="%s (Default: #%s)" % (header, self.defaultMsaValue),
+                header="%s (%s: #%s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
                 note=note,
                 attention=attention
@@ -375,7 +375,7 @@ class DropdownParameter(BaseParameter):
                 {"label": option.displayName} for option in self.options
             ],
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.getOptionByValue(self.defaultValue).displayName),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.getOptionByValue(self.defaultValue).displayName),
                 body=body,
                 note=note,
                 attention=attention
@@ -396,7 +396,7 @@ class RadioButtonGroupParameter(DropdownParameter):
                 {"label": option.displayName} for option in self.options
             ],
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.getOptionByValue(self.defaultValue).displayName),
+                header="%s (%s: %s)" %  (header, Translator.DEFAULT_VALUE, self.getOptionByValue(self.defaultValue).displayName),
                 body=body,
                 note=note,
                 attention=attention
@@ -435,7 +435,7 @@ class TextInputParameter(BaseParameter):
             "varName": self.tokenName,
             "value": self.defaultMsaValue,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, self.defaultMsaValue),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
                 note=note,
                 attention=attention
@@ -524,7 +524,7 @@ class RangeSliderParameter(BaseParameter):
             "divisionLabelStep": self.divisionLabelStep,
             "divisionLabelPostfix": self.divisionLabelPostfix,
             "tooltip": createTooltip(
-                header="%s (Default: %s)" % (header, str(self.defaultMsaValue)),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, str(self.defaultMsaValue)),
                 body=body,
                 note=note,
                 attention=attention
