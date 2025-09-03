@@ -50,7 +50,7 @@ class Config(object):
             template = self.configTemplate.generateTemplate()  
 
             print_debug("[Config] Template = {}".format(template))
-            
+
             settings = g_modsSettingsApi.setModTemplate(
                 modLinkage, 
                 template, 
@@ -150,6 +150,3 @@ class Config(object):
 
             return True
         return False
-
-    def config_exists(self):
-        return self.configFile.config_exists()
