@@ -6,51 +6,51 @@ class StatsWrapper(object):
         self.pointPerFrag = 400
         if data is None:
             self.data = {
-                u"BattleStats": {},
-                u"PlayerInfo": {}
+                "BattleStats": {},
+                "PlayerInfo": {}
             }
         else:
             self.data = data
             
     def _get_player_data(self, arena_id, player_id):
         battle = self.get_battle(arena_id)
-        if battle and player_id in battle.get(u"players", {}):
-            return battle[u"players"][player_id]
+        if battle and player_id in battle.get("players", {}):
+            return battle["players"][player_id]
         return None
 
     def add_player_info(self, player_id, player_name):
-        self.data[u"PlayerInfo"][unicode(player_id)] = unicode(player_name)
+        self.data["PlayerInfo"][unicode(player_id)] = unicode(player_name)
     
     def get_all_players_info(self):
-        return dict(self.data[u"PlayerInfo"])
+        return dict(self.data["PlayerInfo"])
     
     def remove_player_info(self, player_id):
         player_id = unicode(player_id)
-        if player_id in self.data[u"PlayerInfo"]:
-            del self.data[u"PlayerInfo"][player_id]
+        if player_id in self.data["PlayerInfo"]:
+            del self.data["PlayerInfo"][player_id]
             return True
         return False
     
     def create_battle(self, arena_id, start_time=0, duration=0, win=-1, map_name=u"Unknown Map"):
         arena_id = unicode(arena_id)
-        self.data[u"BattleStats"][arena_id] = {
-            u"startTime": start_time,
-            u"duration": duration,
-            u"win": win,
-            u"mapName": unicode(map_name),
-            u"players": {}
+        self.data["BattleStats"][arena_id] = {
+            "startTime": start_time,
+            "duration": duration,
+            "win": win,
+            "mapName": unicode(map_name),
+            "players": {}
         }
     
     def get_battle(self, arena_id):
-        return self.data[u"BattleStats"].get(unicode(arena_id))
+        return self.data["BattleStats"].get(unicode(arena_id))
     
     def get_all_battles(self):
-        return list(self.data[u"BattleStats"].keys())
+        return list(self.data["BattleStats"].keys())
     
     def remove_battle(self, arena_id):
         arena_id = unicode(arena_id)
-        if arena_id in self.data[u"BattleStats"]:
-            del self.data[u"BattleStats"][arena_id]
+        if arena_id in self.data["BattleStats"]:
+            del self.data["BattleStats"][arena_id]
             return True
         return False
     
@@ -61,9 +61,9 @@ class StatsWrapper(object):
         if arena_id not in self.data[u"BattleStats"]:
             self.create_battle(arena_id)
         
-        self.data[u"BattleStats"][arena_id][u"players"][player_id] = {
-            u"name": unicode(name), u"damage": damage, u"kills": kills,
-            u"points": points, u"vehicle": unicode(vehicle)
+        self.data["BattleStats"][arena_id]["players"][player_id] = {
+            "name": unicode(name), "damage": damage, "kills": kills,
+            "points": points, "vehicle": unicode(vehicle)
         }
     
     def get_player_battle_stats(self, arena_id, player_id):
@@ -80,26 +80,27 @@ class StatsWrapper(object):
         if duration is not None:
             battle = self.get_battle(arena_id)
             if battle:
-                battle[u"duration"] = duration
+                battle["duration"] = duration
 
         if win is not None:
             battle = self.get_battle(arena_id)
             if battle:
-                battle[u"win"] = win
+                battle["win"] = win
 
         if name is not None:
-            player_data[u"name"] = unicode(name)
+            player_data["name"] = unicode(name)
         
         if damage is not None:
-            player_data[u"damage"] = damage
-            player_data[u"points"] = player_data.get(u"points", 0) + damage
+            player_data["damage"] = damage
+            player_data["points"] = player_data.get("points", 0) + damage
 
         if kills is not None:
-            player_data[u"kills"] = kills
-            player_data[u"points"] = player_data.get(u"points", 0) + kills * self.pointPerFrag
-        
+            player_data["kills"] = kills
+
+            player_data["points"] = player_data.get("points", 0) + kills * self.pointPerFrag
+
         if vehicle is not None:
-            player_data[u"vehicle"] = unicode(vehicle)
+            player_data["vehicle"] = unicode(vehicle)
 
         return True
 
@@ -109,8 +110,8 @@ class StatsWrapper(object):
             
         player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
         if player_data:
-            player_data[u"damage"] += damage
-            player_data[u"points"] += damage 
+            player_data["damage"] += damage
+            player_data["points"] += damage 
             return True
         return False
     
@@ -120,8 +121,8 @@ class StatsWrapper(object):
 
         player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
         if player_data:
-            player_data[u"kills"] += kills
-            player_data[u"points"] += kills * self.pointPerFrag
+            player_data["kills"] += kills
+            player_data["points"] += kills * self.pointPerFrag
             return True
         return False
 
