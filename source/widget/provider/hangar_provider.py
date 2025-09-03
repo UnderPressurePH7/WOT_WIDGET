@@ -5,7 +5,6 @@ from skeletons.gui.shared.utils import IHangarSpace
 from CurrentVehicle import g_currentVehicle
 
 from ..utils import print_error, print_debug, g_statsWrapper
-from ..config import g_config
 from ..server_connect import g_serverClient
 
 class HangarProvider(object):
@@ -36,11 +35,19 @@ class HangarProvider(object):
             BigWorld.callback(1, self.onAccountShowGUI)
 
     def onSendPlayerInfo(self):
-        print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
-        g_serverClient.setApiKey(g_config.api_key.value)
-        print_debug("[HangarProvider] API key set to: {}".format(g_config.api_key.value))
-        g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
-        g_serverClient.send_stats(player_id=self.account_id)
+        try:
+            from ..config import g_config
+            print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
+            api_key = getattr(g_config.configParams.apiKey, 'value', 'dev-test')
+            g_serverClient.setApiKey(api_key)
+            
+            print_debug("[HangarProvider] API key set to: {}".format(api_key))
+
+            g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
+            g_serverClient.send_stats(player_id=self.account_id)
+        except ImportError:
+            print_debug("[HangarProvider] Config not available, using default API key")
+            g_serverClient.setApiKey('dev-test')
 
     def onHangarSpaceCreate(self, *args):
         self.isInHangar = True

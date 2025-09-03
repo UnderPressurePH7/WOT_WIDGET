@@ -5,20 +5,11 @@ class Template(object):
         self.mod_display_name = None
         self.column1_items = []
         self.column2_items = []
-        
-    
-    # def _setup_default_items(self):
-    #     self.add_to_column1(LabelParam().renderParam(u'Основні налаштування'))
-        
-    #     if hasattr(self.config_params, 'apiKey'):
-    #         api_key_param = self.config_params.apiKey
-    #         self.add_to_column1(api_key_param.renderParam(
-    #             header=u'Api Key',
-    #             body=u'Ваш API ключ для передачі даних'
-    #         ))
-        
-    #     self.add_to_column2(LabelParam().renderParam(u'Додаткові налаштування'))
-    
+
+    def _default_enabled(self):
+        enabled_param = getattr(self.config_params, 'enabled', None)
+        return enabled_param.defaultValue if enabled_param else True
+
     def set_mod_display_name(self, name):
         self.mod_display_name = unicode(name)
         return self
@@ -38,7 +29,7 @@ class Template(object):
             param = getattr(self.config_params, param_name)
             if hasattr(param, 'renderParam'):
                 rendered_param = param.renderParam(
-                    header=header or param.name,
+                    header=header or param.name.title(), 
                     body=body,
                     note=note,
                     attention=attention
@@ -51,7 +42,7 @@ class Template(object):
             param = getattr(self.config_params, param_name)
             if hasattr(param, 'renderParam'):
                 rendered_param = param.renderParam(
-                    header=header or param.name,
+                    header=header or param.name.title(),
                     body=body,
                     note=note,
                     attention=attention
@@ -59,21 +50,18 @@ class Template(object):
                 self.add_to_column2(rendered_param)
         return self
     
-    
-    def clear_column(self):
+    def clear_columns(self):
         self.column1_items = []
         self.column2_items = []
         return self
     
-    
-    def generate_template(self):
-        enabled_param = getattr(self.config_params, 'enabled', None)
-        
+    def generateTemplate(self):  
         template = {
             'modDisplayName': self.mod_display_name,
-            'enabled': enabled_param.defaultValue if enabled_param else True,
+            'enabled': self._default_enabled(),
             'column1': list(self.column1_items),
             'column2': list(self.column2_items)
         }
         
         return template
+    

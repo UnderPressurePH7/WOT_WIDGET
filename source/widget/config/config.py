@@ -10,7 +10,6 @@ except ImportError:
     print_error("[Config] Failed to import g_modsSettingsApi")
     g_modsSettingsApi = None
 
-
 modLinkage = 'me.under-pressure.widget'
 
 class Config(object):
@@ -96,17 +95,57 @@ class Config(object):
             return
             
         try:
-            self.configTemplate.set_mod_display_name("Віджет від Палича")
-            self.configTemplate.add_to_column1(LabelParam().renderParam(u'Основні налаштування'))
-            self.configTemplate.add_parameter_to_column1("apiKey", body="Ваш API ключ для передачі даних")
+            self.configTemplate.set_mod_display_name(u"Віджет від Палича")
+            
+            self.configTemplate.add_to_column1(
+                LabelParam().renderParam(u'Основні налаштування')
+            )
+            
+            self.configTemplate.add_parameter_to_column1(
+                "enabled", 
+                header=u"Увімкнути мод",
+                body=u"Увімкнути або вимкнути мод"
+            )
+            
+            self.configTemplate.add_parameter_to_column1(
+                "apiKey", 
+                header=u"API Ключ",
+                body=u"Ваш API ключ для передачі даних на сервер"
+            )
 
-            template = self.configTemplate.generateTemplate()
+            template = self.configTemplate.generateTemplate()  
 
-            g_modsSettingsApi.setModTemplate(modLinkage, template, self.on_settings_changed)
+            settings = g_modsSettingsApi.setModTemplate(
+                modLinkage, 
+                template, 
+                self.on_settings_changed
+            )
+            
+            if settings:
+                self._apply_settings_from_msa(settings)
+            
             print_debug("[Config] Mod template registered successfully")
             
         except Exception as e:
             print_error("[Config] Error registering mod template: {}".format(str(e)))
+
+    def _apply_settings_from_msa(self, settings):
+        try:
+            config_items = self.configParams.items()
+            for param_name, value in settings.items():
+                if param_name in config_items:
+                    param = config_items[param_name]
+                    try:
+                        param.msaValue = value
+                    except Exception as e:
+                        print_error("[Config] Error applying MSA setting {} = {}: {}".format(
+                            param_name, value, str(e)))
+            
+            self.save_config()
+            print_debug("[Config] Applied settings from MSA")
+            
+        except Exception as e:
+            print_error("[Config] Error applying MSA settings: {}".format(str(e)))
 
     def on_settings_changed(self, linkage, newSettings):
         if linkage != modLinkage:
@@ -132,6 +171,7 @@ class Config(object):
             self.save_config()
             self._notify_config_changed()
             print_debug("[Config] Settings updated successfully")
+            
         except Exception as e:
             print_error("[Config] Error updating settings from MSA: {}".format(str(e)))
 
@@ -154,6 +194,13 @@ class Config(object):
 
     def sync_with_msa(self):
         try:
-            print_debug("[Config] MSA sync called - using config file values")
+            if g_modsSettingsApi:
+                current_settings = {}
+                config_items = self.configParams.items()
+                for param_name, param in config_items.items():
+                    current_settings[param_name] = param.msaValue
+                
+                g_modsSettingsApi.updateModSettings(modLinkage, current_settings)
+                print_debug("[Config] Synchronized with MSA")
         except Exception as e:
             print_error("[Config] Error in MSA sync: {}".format(str(e)))
