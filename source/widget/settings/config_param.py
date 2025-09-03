@@ -12,7 +12,7 @@ class ConfigParams(object):
         self.apiKey = TextInputParameter(
             ['apiKey'],
             defaultValue=u'dev-test',
-            maxLength=100
+            maxLength=10
         )
 
     def items(self):
