@@ -221,3 +221,7 @@ class Translator(object):
     API_KEY = TranslationElement("apiKey")
     API_KEY_HEADER = TranslationElement("apiKey.header")
     API_KEY_BODY = TranslationElement("apiKey.body")
+    TOURNAMENT_TYPE_HEADER = TranslationElement("tournamentType.header")
+    TOURNAMENT_TYPE_BODY = TranslationElement("tournamentType.body")
+    TOURNAMENT_TYPE_OPTION_PLATOON = TranslationElement("tournamentType.option.platoon")
+    TOURNAMENT_TYPE_OPTION_SOLO = TranslationElement("tournamentType.option.solo")

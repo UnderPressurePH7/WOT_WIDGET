@@ -13,8 +13,8 @@ class ConfigParams(object):
             ['tournamentType'],
             defaultValue='platoon',
             options=[
-                (u'platoon', Translator.tournamentType.option.platoon),
-                (u'solo', Translator.tournamentType.option.solo)
+                (u'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
+                (u'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
             ]
         )
 
