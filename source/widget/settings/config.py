@@ -41,11 +41,11 @@ class Config(object):
                 LabelParameter().renderParam(Translator.MAIN_LABEL)
             )
 
-            # self.configTemplate.add_parameter_to_column1(
-            #     "tournamentType",
-            #     header=Translator.TOURNAMENT_TYPE_HEADER,
-            #     body=Translator.TOURNAMENT_TYPE_BODY
-            # )
+            self.configTemplate.add_parameter_to_column1(
+                "tournamentType",
+                header=Translator.TOURNAMENT_TYPE_HEADER,
+                body=Translator.TOURNAMENT_TYPE_BODY
+            )
             
             self.configTemplate.add_parameter_to_column1(
                 "apiKey",

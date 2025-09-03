@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .config_param_types import CheckboxParameter, TextInputParameter, RadioButtonGroupParameter
+from .config_param_types import CheckboxParameter, TextInputParameter, RadioButtonGroupParameter, OptionItem
 from .translations import Translator
 
 class ConfigParams(object):    
@@ -9,14 +9,14 @@ class ConfigParams(object):
             defaultValue=True
         )
 
-        # self.tournamentType = RadioButtonGroupParameter(
-        #     ['tournamentType'],
-        #     defaultValue='platoon',
-        #     options=[
-        #         (u'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
-        #         (u'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
-        #     ]
-        # )
+        self.tournamentType = RadioButtonGroupParameter(
+            ['tournamentType'],
+            defaultValue='platoon',
+            options=[
+                OptionItem('platoon', 'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
+                OptionItem('solo', 'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
+            ]
+)
 
         self.apiKey = TextInputParameter(
             ['apiKey'],
