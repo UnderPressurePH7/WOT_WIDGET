@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from .config_param_types import LabelParameter
 from .config_file import ConfigFile
-from ..utils import print_error, print_debug
+
 from .config_param import ConfigParams
 from .config_template import Template
+
+from ..utils import print_error, print_debug
 try:
     from gui.modsSettingsApi import g_modsSettingsApi   
 except ImportError:

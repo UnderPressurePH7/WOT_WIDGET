@@ -1,0 +1,10 @@
+{
+    "modname": "Widget from Palych",
+    "checked": "enabled",
+    "unchecked": "disabled",
+    "defaultValue": "default",
+    "mainLabel": "Main settings",
+    "apiKey": "Access key",
+    "apiKey.header": "API Key",
+    "apiKey.body": "Your API key for transferring data to the server"
+}
