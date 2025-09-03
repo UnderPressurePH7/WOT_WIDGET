@@ -9,14 +9,14 @@ class ConfigParams(object):
             defaultValue=True
         )
 
-        self.tournamentType = RadioButtonGroupParameter(
-            ['tournamentType'],
-            defaultValue='platoon',
-            options=[
-                (u'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
-                (u'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
-            ]
-        )
+        # self.tournamentType = RadioButtonGroupParameter(
+        #     ['tournamentType'],
+        #     defaultValue='platoon',
+        #     options=[
+        #         (u'platoon', Translator.TOURNAMENT_TYPE_OPTION_PLATOON),
+        #         (u'solo', Translator.TOURNAMENT_TYPE_OPTION_SOLO)
+        #     ]
+        # )
 
         self.apiKey = TextInputParameter(
             ['apiKey'],
