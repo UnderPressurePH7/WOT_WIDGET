@@ -74,15 +74,28 @@ Write-Host "Compiled files are in: $DestDir" -ForegroundColor Yellow
 Write-Host "`nCleaning up res directory..." -ForegroundColor Yellow
 try {
     if (Test-Path $ResDir) {
-        Remove-Item -Path $ResDir -Recurse -Force
-        Write-Host "Successfully deleted res directory and its contents!" -ForegroundColor Green
+        $items = Get-ChildItem -Path $ResDir
+
+        if ($items.Count -eq 1 -and $items[0].PSIsContainer -and $items[0].Name -eq "scripts") {
+            Remove-Item -Path $ResDir -Recurse -Force
+            Write-Host "Deleted entire res directory (only 'scripts' was inside)." -ForegroundColor Green
+        } else {
+            $scriptsPath = Join-Path $ResDir "scripts"
+            if (Test-Path $scriptsPath) {
+                Remove-Item -Path $scriptsPath -Recurse -Force
+                Write-Host "Deleted res\scripts directory, other files/folders left intact." -ForegroundColor Green
+            } else {
+                Write-Host "No scripts folder found in res, nothing to delete." -ForegroundColor Yellow
+            }
+        }
     } else {
         Write-Host "Res directory not found - nothing to clean up." -ForegroundColor Yellow
     }
 }
 catch {
-    Write-Host "Error deleting res directory: $_" -ForegroundColor Red
+    Write-Host "Error during cleanup: $_" -ForegroundColor Red
 }
+
 
 Write-Host "`nPress any key to continue..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
