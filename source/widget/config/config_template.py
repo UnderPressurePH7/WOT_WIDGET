@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+class Template(object):
+    def __init__(self, config_params):
+        self.config_params = config_params
+        self.mod_display_name = None
+        self.column1_items = []
+        self.column2_items = []
+        
+    
+    # def _setup_default_items(self):
+    #     self.add_to_column1(LabelParam().renderParam(u'Основні налаштування'))
+        
+    #     if hasattr(self.config_params, 'apiKey'):
+    #         api_key_param = self.config_params.apiKey
+    #         self.add_to_column1(api_key_param.renderParam(
+    #             header=u'Api Key',
+    #             body=u'Ваш API ключ для передачі даних'
+    #         ))
+        
+    #     self.add_to_column2(LabelParam().renderParam(u'Додаткові налаштування'))
+    
+    def set_mod_display_name(self, name):
+        self.mod_display_name = unicode(name)
+        return self
+    
+    def add_to_column1(self, item):
+        if isinstance(item, dict):
+            self.column1_items.append(item)
+        return self
+    
+    def add_to_column2(self, item):
+        if isinstance(item, dict):
+            self.column2_items.append(item)
+        return self
+    
+    def add_parameter_to_column1(self, param_name, header=None, body=None, note=None, attention=None):
+        if hasattr(self.config_params, param_name):
+            param = getattr(self.config_params, param_name)
+            if hasattr(param, 'renderParam'):
+                rendered_param = param.renderParam(
+                    header=header or param.name,
+                    body=body,
+                    note=note,
+                    attention=attention
+                )
+                self.add_to_column1(rendered_param)
+        return self
+    
+    def add_parameter_to_column2(self, param_name, header=None, body=None, note=None, attention=None):
+        if hasattr(self.config_params, param_name):
+            param = getattr(self.config_params, param_name)
+            if hasattr(param, 'renderParam'):
+                rendered_param = param.renderParam(
+                    header=header or param.name,
+                    body=body,
+                    note=note,
+                    attention=attention
+                )
+                self.add_to_column2(rendered_param)
+        return self
+    
+    
+    def clear_column(self):
+        self.column1_items = []
+        self.column2_items = []
+        return self
+    
+    
+    def generate_template(self):
+        enabled_param = getattr(self.config_params, 'enabled', None)
+        
+        template = {
+            'modDisplayName': self.mod_display_name,
+            'enabled': enabled_param.defaultValue if enabled_param else True,
+            'column1': list(self.column1_items),
+            'column2': list(self.column2_items)
+        }
+        
+        return template

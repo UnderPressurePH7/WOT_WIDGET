@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from .config_param_types import LabelParam
 from ..utils import print_error, print_debug
 
 try:
@@ -13,8 +14,9 @@ except ImportError:
 modLinkage = 'me.under-pressure.widget'
 
 class Config(object):
-    def __init__(self, configParams):
+    def __init__(self, configParams, configTemplate):
         self.configParams = configParams
+        self.configTemplate = configTemplate
         self.config_path = os.path.join('mods', 'configs', 'under_pressure', 'widget.json')
         self._loadedSuccessfully = False
         
@@ -94,10 +96,11 @@ class Config(object):
             return
             
         try:
-            from .config_gui_template import ModTemplate
-            
-            mod_template = ModTemplate(self.configParams)
-            template = mod_template.generateTemplate()
+            self.configTemplate.set_mod_display_name("Віджет від Палича")
+            self.configTemplate.add_to_column1(LabelParam().renderParam(u'Основні налаштування'))
+            self.configTemplate.add_parameter_to_column1("apiKey", body="Ваш API ключ для передачі даних")
+
+            template = self.configTemplate.generateTemplate()
 
             g_modsSettingsApi.setModTemplate(modLinkage, template, self.on_settings_changed)
             print_debug("[Config] Mod template registered successfully")
