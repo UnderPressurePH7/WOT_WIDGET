@@ -52,7 +52,7 @@ def createTooltip(header=None, body=None, note=None, attention=None):
     return res_str
 
 
-class Param(object):
+class BaseParameter(object):
 
     def __init__(self, path, defaultValue, disabledValue=None):
         self.name = path[-1]
@@ -142,10 +142,10 @@ class Param(object):
         return self.tokenName
 
 
-class BooleanParam(Param):
+class CheckboxParameter(BaseParameter):
 
     def __init__(self, path, defaultValue=None, disabledValue=None):
-        super(BooleanParam, self).__init__(path, defaultValue, disabledValue)
+        super(CheckboxParameter, self).__init__(path, defaultValue, disabledValue)
 
     def toMsaValue(self, value):
         return value
@@ -174,10 +174,10 @@ class BooleanParam(Param):
         }
 
 
-class NumberParam(Param):
+class NumericParameter(BaseParameter):
 
     def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
-        super(NumberParam, self).__init__(path, defaultValue, disabledValue)
+        super(NumericParameter, self).__init__(path, defaultValue, disabledValue)
         self.castFunction = castFunction
         self.minValue = minValue
         self.step = step
@@ -200,10 +200,10 @@ class NumberParam(Param):
         raise NotImplementedError()
 
 
-class FloatTextParam(Param):
+class FloatTextInputParameter(BaseParameter):
 
     def __init__(self, path, minValue, maxValue, defaultValue, disabledValue=None):
-        super(FloatTextParam, self).__init__(path, defaultValue, disabledValue)
+        super(FloatTextInputParameter, self).__init__(path, defaultValue, disabledValue)
         self.minValue = minValue
         self.maxValue = maxValue
 
@@ -238,10 +238,10 @@ class FloatTextParam(Param):
         }
 
 
-class StepperParam(NumberParam):
+class StepperParameter(NumericParameter):
 
     def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None):
-        super(StepperParam, self).__init__(path, castFunction,
+        super(StepperParameter, self).__init__(path, castFunction,
                                            minValue, step, maxValue,
                                            defaultValue, disabledValue)
 
@@ -263,10 +263,10 @@ class StepperParam(NumberParam):
         }
 
 
-class SliderParam(NumberParam):
+class SliderParameter(NumericParameter):
 
     def __init__(self, path, castFunction, minValue, step, maxValue, defaultValue, disabledValue=None, format_str='{{value}}'):
-        super(SliderParam, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
+        super(SliderParameter, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
         self.format_str = format_str
 
     def renderParam(self, header, body=None, note=None, attention=None):
@@ -288,10 +288,10 @@ class SliderParam(NumberParam):
         }
 
 
-class ColorParam(Param):
+class ColorParameter(BaseParameter):
 
     def __init__(self, path, defaultValue=None, disabledValue=None):
-        super(ColorParam, self).__init__(path, defaultValue, disabledValue)
+        super(ColorParameter, self).__init__(path, defaultValue, disabledValue)
 
     def toMsaValue(self, value):
         return self.__colorToHex(value)
@@ -328,7 +328,7 @@ class ColorParam(Param):
         return ("%02x%02x%02x" % color).upper()
 
 
-class Option(object):
+class OptionItem(object):
 
     def __init__(self, value, msaValue, displayName):
         self.value = value
@@ -336,10 +336,10 @@ class Option(object):
         self.displayName = displayName
 
 
-class OptionsParam(Param):
+class DropdownParameter(BaseParameter):
 
     def __init__(self, path, options, defaultValue, disabledValue=None):
-        super(OptionsParam, self).__init__(path, defaultValue, disabledValue)
+        super(DropdownParameter, self).__init__(path, defaultValue, disabledValue)
         self.options = options
 
     def toMsaValue(self, value):
@@ -384,7 +384,7 @@ class OptionsParam(Param):
         }
 
 
-class RadioButtonGroupParam(OptionsParam):
+class RadioButtonGroupParameter(DropdownParameter):
 
     def renderParam(self, header, body=None, note=None, attention=None):
         return {
@@ -404,10 +404,10 @@ class RadioButtonGroupParam(OptionsParam):
         }
 
 
-class TextParam(Param):
+class TextInputParameter(BaseParameter):
 
     def __init__(self, path, defaultValue=u'', disabledValue=None, maxLength=None):
-        super(TextParam, self).__init__(path, defaultValue, disabledValue)
+        super(TextInputParameter, self).__init__(path, defaultValue, disabledValue)
         self.maxLength = maxLength
 
     def toMsaValue(self, value):
@@ -444,12 +444,12 @@ class TextParam(Param):
         }
 
 
-class HotkeyParam(Param):
+class HotkeyParameter(BaseParameter):
 
     def __init__(self, path, defaultValue=None, disabledValue=None):
         if defaultValue is None:
             defaultValue = []
-        super(HotkeyParam, self).__init__(path, defaultValue, disabledValue)
+        super(HotkeyParameter, self).__init__(path, defaultValue, disabledValue)
 
     def toMsaValue(self, value):
         return value if value else []
@@ -478,12 +478,12 @@ class HotkeyParam(Param):
         }
 
 
-class RangeSliderParam(Param):
+class RangeSliderParameter(BaseParameter):
 
     def __init__(self, path, defaultValue, minValue, maxValue, step=1, 
                  divisionStep=None, minRangeDistance=1, divisionLabelStep=None, 
                  divisionLabelPostfix='', disabledValue=None):
-        super(RangeSliderParam, self).__init__(path, defaultValue, disabledValue)
+        super(RangeSliderParameter, self).__init__(path, defaultValue, disabledValue)
         self.minValue = minValue
         self.maxValue = maxValue
         self.step = step
@@ -532,7 +532,7 @@ class RangeSliderParam(Param):
         }
 
 
-class LabelParam(object):
+class LabelParameter(object):
 
     def renderParam(self, header, body=None, note=None, attention=None):
         return {
@@ -550,12 +550,12 @@ class LabelParam(object):
 def createSimpleOptions(labels):
     options = []
     for i, label in enumerate(labels):
-        options.append(Option(i, i, unicode(label)))
+        options.append(OptionItem(i, i, unicode(label)))
     return options
 
 
 def createKeyValueOptions(key_value_dict):
     options = []
     for key, label in key_value_dict.items():
-        options.append(Option(key, key, unicode(label)))
+        options.append(OptionItem(key, key, unicode(label)))
     return options
