@@ -36,7 +36,7 @@ class HangarProvider(object):
 
     def onSendPlayerInfo(self):
         try:
-            from ..config import g_config
+            from ..settings import g_config
             print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
             api_key = getattr(g_config.configParams.apiKey, 'value', 'dev-test')
             g_serverClient.setApiKey(api_key)
