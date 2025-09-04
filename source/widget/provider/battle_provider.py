@@ -6,7 +6,7 @@ from constants import  ARENA_PERIOD_NAMES
 from gui.battle_control import avatar_getter
 from items import vehicles
 from helpers.i18n import makeString
-from ..server import g_serverClient
+from ..server import g_serverManager
 from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleProvider():
@@ -156,14 +156,19 @@ class BattleProvider():
         if period_name == "PREBATTLE":
             g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
             g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
-            g_serverClient.send_stats(player_id=self.playerID)
+            result = g_serverManager.send_stats(player_id=self.playerID)
+            if result:
+                print_debug("[BattleProvider] Battle started info sent successfully for Player ID: {}".format(self.playerID))
 
     def onVehicleKilled(self, target_id, attacker_id, reason, is_respawn, *args):
         try:
             if attacker_id > 0 and self.isCurrentPlayer(attacker_id):
                 
                 g_statsWrapper.add_kills(self.arenaUniqueID, self.playerID, 1)
-                g_serverClient.send_stats(player_id=self.playerID)
+                result = g_serverManager.send_stats(player_id=self.playerID)
+                if result:
+                    print_debug("[BattleProvider] Vehicle killed info sent successfully for Player ID: {}".format(self.playerID))
+
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle killed event: {}".format(e))
 
@@ -173,7 +178,9 @@ class BattleProvider():
             if damage > 0 and self.isCurrentPlayer(attacker_id):
                 actual_damage = max(0, damage)
                 g_statsWrapper.add_damage(self.arenaUniqueID, self.playerID, actual_damage)
-                g_serverClient.send_stats(player_id=self.playerID)
+                result = g_serverManager.send_stats(player_id=self.playerID)
+                if result:
+                    print_debug("[BattleProvider] Vehicle health changed info sent successfully for Player ID: {}".format(self.playerID))
 
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle health changed event: {}".format(e))
@@ -183,6 +190,6 @@ class BattleProvider():
             g_playerEvents.onAvatarReady -= self.onBattleSessionStart
             g_playerEvents.onAvatarBecomeNonPlayer -= self.onBattleSessionStop
             g_statsWrapper.clear_all_data()
-            g_serverClient.disconnect()
+            g_serverManager.disconnect()
         except Exception as e:
             print_error("[BattleProvider] Error in BattleProvider.fini: {}".format(e))

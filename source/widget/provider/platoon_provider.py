@@ -41,8 +41,7 @@ class PlatoonProvider():
 
     def onSendPlayerInfo(self):
         try:
-            from ..settings import g_config
-            from ..server import g_serverClient, ServerClient
+            from ..server import g_serverManager
 
             player = BigWorld.player()
             if player:
@@ -52,16 +51,10 @@ class PlatoonProvider():
             print_debug("[PlatoonProvider] Sending player info to server for account ID: {}".format(account_id))
             
             g_statsWrapper.add_player_info(player_id=account_id, player_name=account_name)
+            result =  g_serverManager.send_stats(player_id=account_id)
+            if result:
+                print_debug("[PlatoonProvider] Player info sent successfully for account ID: {}".format(account_id))
 
-            api_key = g_config.get_api_key()
-            if api_key != g_serverClient.access_key:
-                print_debug("[PlatoonProvider] API key mismatch, reinitializing server client")
-                g_serverClient.disconnect()
-                g_serverClient = None
-                g_serverClient = ServerClient(api_key)
-
-            print_debug("[PlatoonProvider] API key set to: {}".format(api_key))
-            g_serverClient.send_stats(player_id=account_id)
         except ImportError:
             print_debug("[PlatoonProvider] Config not available, using default API key")
 

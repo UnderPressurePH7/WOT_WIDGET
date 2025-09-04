@@ -1,3 +1,4 @@
+from unittest import result
 import BigWorld
 from PlayerEvents import g_playerEvents
 from helpers import dependency
@@ -35,20 +36,14 @@ class HangarProvider(object):
 
     def onSendPlayerInfo(self):
         try:
-            from ..settings import g_config
-            from ..server import g_serverClient, ServerClient
+            from ..server import g_serverManager
             print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
             g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
 
-            api_key = g_config.get_api_key()
-            if api_key != g_serverClient.access_key:
-                print_debug("[HangarProvider] API key mismatch, reinitializing server client")
-                g_serverClient.disconnect()
-                g_serverClient = None
-                g_serverClient = ServerClient(api_key)
-            
-            print_debug("[HangarProvider] API key set to: {}".format(api_key))
-            g_serverClient.send_stats(player_id=self.account_id)
+            result = g_serverManager.send_stats(player_id=self.account_id)
+            if result:
+                print_debug("[HangarProvider] Player info sent successfully for account ID: {}".format(self.account_id))
+
 
         except ImportError:
             print_debug("[HangarProvider] Config not available, using default API key")

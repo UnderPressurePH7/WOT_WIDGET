@@ -1,9 +1,8 @@
 import BigWorld
-from .server_connect import ServerClient
+from .server_manager import ServerManager
 
 __all__ = [
-    'g_serverClient',
-    'ServerClient'
+    'g_serverManager',
 ]
 
-g_serverClient = ServerClient()
+g_serverManager = ServerManager()
