@@ -134,7 +134,7 @@ class Config(object):
             from ..server.server_connect import g_serverClient, ServerClient
 
             
-            api_key_param = self.configParams.items().get('apiKey')
+            api_key_param = self.get_api_key()
             if api_key_param:
                 g_serverClient.disconnect()
                 g_serverClient = None
@@ -203,15 +203,55 @@ class Config(object):
         return False
     
     def get_api_key(self):
-        if self.configParams.tournamentType.value == 'platoon':
-            return self.configParams.apiKey.value
-        else:
-            if self.configParams.chooseBlogger.value == 'Palu4':
-                return 'Palu4'
-            elif self.configParams.chooseBlogger.value == 'Vgosti':
-                return 'Vgosti'
-            elif self.configParams.chooseBlogger.value == 'YKP_BOIH':
-                return 'YKP_BOIH'
-            elif self.configParams.chooseBlogger.value == 'Bizzord':
-                return 'Bizzord'
-        return 'dev-test'
+        try:
+            if not hasattr(self, 'configParams'):
+                print_debug("[Config] configParams not available, using default API key")
+                return 'dev-test'
+            
+            tournament_type_param = getattr(self.configParams, 'tournamentType', None)
+            if not tournament_type_param:
+                print_debug("[Config] tournamentType parameter not found, using default API key")
+                return 'dev-test'
+            
+            tournament_type = tournament_type_param.value
+            print_debug("[Config] Tournament type: {}".format(tournament_type))
+            
+            if tournament_type == 'platoon':
+                api_key_param = getattr(self.configParams, 'apiKey', None)
+                if not api_key_param:
+                    print_debug("[Config] apiKey parameter not found for platoon type")
+                    return 'dev-test'
+                
+                api_key = api_key_param.value
+                if not api_key or len(str(api_key).strip()) < 3:
+                    print_debug("[Config] Invalid API key for platoon type, using default")
+                    return 'dev-test'
+                
+                return str(api_key).strip()
+            
+            else:
+                blogger_param = getattr(self.configParams, 'chooseBlogger', None)
+                if not blogger_param:
+                    print_debug("[Config] chooseBlogger parameter not found")
+                    return 'dev-test'
+                
+                blogger_value = blogger_param.value
+                print_debug("[Config] Selected blogger: {}".format(blogger_value))
+                
+                blogger_api_keys = {
+                    'Palu4': 'Palu4',
+                    'Vgosti': 'Vgosti',
+                    'YKP_BOIH': 'YKP_BOIH',
+                    'Bizzord': 'Bizzord'
+                }
+                
+                api_key = blogger_api_keys.get(blogger_value)
+                if api_key:
+                    return api_key
+                else:
+                    print_debug("[Config] Unknown blogger '{}', using default API key".format(blogger_value))
+                    return 'dev-test'
+        
+        except Exception as e:
+            print_error("[Config] Error getting API key: {}".format(e))
+            return 'dev-test'
