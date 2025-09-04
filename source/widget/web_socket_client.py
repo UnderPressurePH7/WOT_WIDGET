@@ -60,7 +60,9 @@ class WebSocketClient(object):
         raw_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         raw_sock.settimeout(10.0)
         if self.secure:
-            context = ssl.create_default_context()
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
             self.ssl_sock = context.wrap_socket(raw_sock, server_hostname=self.host)
         else:
             self.ssl_sock = raw_sock
