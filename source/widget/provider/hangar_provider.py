@@ -40,7 +40,7 @@ class HangarProvider(object):
             print_debug("[HangarProvider] Sending player info to server for account ID: {}".format(self.account_id))
             g_statsWrapper.add_player_info(player_id=self.account_id, player_name=self.account_name)
 
-            api_key = getattr(g_config.configParams.apiKey, 'value', 'dev-test')
+            api_key = g_config.get_api_key()
             if api_key != g_serverClient.access_key:
                 print_debug("[HangarProvider] API key mismatch, reinitializing server client")
                 g_serverClient = None

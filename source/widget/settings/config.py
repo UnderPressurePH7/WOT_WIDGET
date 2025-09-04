@@ -170,10 +170,10 @@ class Config(object):
 
             from ..server import g_serverClient, ServerClient
             if hasattr(self, 'configParams') and hasattr(self.configParams, 'apiKey'):
-                apiKey = self.configParams.apiKey.value
+                apiKey = self.get_api_key()
                 if apiKey != g_serverClient.access_key:
                     g_serverClient = None
-                    g_serverClient = ServerClient(self.configParams.apiKey.value)
+                    g_serverClient = ServerClient(api_key=apiKey)
 
         except Exception as e:
             print_error("[Config] Error reloading config: {}".format(str(e)))
@@ -199,3 +199,17 @@ class Config(object):
             self._loadConfigFileToParams()
             return True
         return False
+    
+    def get_api_key(self):
+        if self.configParams.tournamentType.value == 'platoon':
+            return self.configParams.apiKey.value
+        else:
+            if self.configParams.chooseBlogger.value == 'Palu4':
+                return 'Palu4'
+            elif self.configParams.chooseBlogger.value == 'Vgosti':
+                return 'Vgosti'
+            elif self.configParams.chooseBlogger.value == 'YKP_BOIH':
+                return 'YKP_BOIH'
+            elif self.configParams.chooseBlogger.value == 'Bizzord':
+                return 'Bizzord'
+        return 'dev-test'

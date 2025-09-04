@@ -53,7 +53,7 @@ class PlatoonProvider():
             
             g_statsWrapper.add_player_info(player_id=account_id, player_name=account_name)
 
-            api_key = getattr(g_config.configParams.apiKey, 'value', 'dev-test')
+            api_key = g_config.get_api_key()
             if api_key != g_serverClient.access_key:
                 print_debug("[PlatoonProvider] API key mismatch, reinitializing server client")
                 g_serverClient = None
