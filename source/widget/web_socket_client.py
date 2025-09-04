@@ -4,13 +4,13 @@ import threading
 import json
 import time
 import ssl
-import Queue as queue 
+import Queue as queue
 from .utils import print_error, print_debug
 
 MAX_PAYLOAD_SIZE = 2 * 1024 * 1024
 
 
-class WebSocketClient(object):  
+class WebSocketClient(object):
     def __init__(self, host, port=443, secure=True, api_key=None, secret_key=None, player_id=None):
         self.host = host
         self.port = port
@@ -20,10 +20,11 @@ class WebSocketClient(object):
         self.player_id = player_id
 
         self.ws = None
+        self.worker_thread = None
+        self.sender_thread = None
+        
         self.connected = False
         self.stop_event = threading.Event()
-        self.sender_thread = None
-        self.recv_thread = None
         self.queue = queue.Queue(maxsize=100)
 
         self.ping_interval = 25
@@ -43,52 +44,84 @@ class WebSocketClient(object):
     def connect(self):
         url = self._build_url()
         print_debug("[WS] Connecting to {}".format(url))
-        self.ws = websocket.WebSocket()
-        try:
-            self.ws.connect(url, sslopt={"cert_reqs": ssl.CERT_NONE})
-            self.connected = True
-            print_debug("[WS] TCP connection established")
+        
+        self.ws = websocket.WebSocketApp(
+            url,
+            on_open=self._on_open,
+            on_message=self._on_message,
+            on_error=self._on_error,
+            on_close=self._on_close
+        )
+        
+        self.worker_thread = threading.Thread(
+            target=self.ws.run_forever,
+            kwargs={'sslopt': {"cert_reqs": ssl.CERT_NONE}}
+        )
+        self.worker_thread.daemon = True
+        self.worker_thread.start()
 
-            open_packet = self.ws.recv()
-            if open_packet.startswith("0"):
-                data = json.loads(open_packet[1:])
+    def _on_open(self, ws):
+        print_debug("[WS] Connection opened")
+
+        
+    def _on_message(self, ws, msg):
+        if msg.startswith("0"):  
+            try:
+                data = json.loads(msg[1:])
                 self.ping_interval = int(data.get("pingInterval", 25000)) / 1000.0
                 self.ping_timeout = int(data.get("pingTimeout", 5000)) / 1000.0
                 print_debug("[WS] Handshake ok, sid={}, ping={}s".format(data.get('sid'), self.ping_interval))
+                
+                ws.send("40")
+                print_debug("[WS] Namespace connect sent")
 
-            self.ws.send("40")
-            print_debug("[WS] Namespace connected")
+                self.connected = True
+                self.stop_event.clear()
+                self.sender_thread = threading.Thread(target=self._sender_loop)
+                self.sender_thread.daemon = True
+                self.sender_thread.start()
+            except Exception as e:
+                print_error("[WS] Failed to parse handshake: {} ({})".format(msg, e))
 
-            self.stop_event.clear()
-            
-            self.sender_thread = threading.Thread(target=self._sender_loop)
-            self.sender_thread.daemon = True  
-            
-            self.recv_thread = threading.Thread(target=self._recv_loop)
-            self.recv_thread.daemon = True
-            
-            self.sender_thread.start()
-            self.recv_thread.start()
+        elif msg == "3":  
+            return
+        
+        elif msg.startswith("42"): 
+            try:
+                arr = json.loads(msg[2:])
+                event = arr[0]
+                data = arr[1] if len(arr) > 1 else None
+                print_debug("[WS] <- event={}, data={}".format(event, data))
+            except Exception as e:
+                print_error("[WS] Failed to parse event: {} ({})".format(msg, e))
 
-        except Exception as e:
-            print_error("[WS] Connection error: {}".format(e))
-            self.connected = False
-            self.ws = None
+        elif msg.startswith("40"):
+            print_debug("[WS] Server confirmed namespace connect")
+
+        else:
+            print_debug("[WS] <- raw: {}".format(msg))
+    
+    def _on_error(self, ws, error):
+        print_error("[WS] Connection error: {}".format(error))
+        self.connected = False
+        self.stop_event.set()
+
+    def _on_close(self, ws, close_status_code, close_msg):
+        print_debug("[WS] Connection closed")
+        self.connected = False
+        self.stop_event.set()
 
     def _sender_loop(self):
         last_ping = time.time()
         while not self.stop_event.is_set():
             try:
-                # ping
                 if time.time() - last_ping > self.ping_interval:
-                    self.ws.send("2")  # ping
+                    self.ws.send("2")
                     last_ping = time.time()
 
-                # send queued messages
                 try:
                     event, data = self.queue.get(timeout=0.1)
                     payload = '42{}'.format(json.dumps([event, data]))
-                    # У Python 2 str - це вже байти, encode не потрібен
                     if len(payload) > MAX_PAYLOAD_SIZE:
                         print_error("[WS] Payload too big, skipped")
                         continue
@@ -98,35 +131,7 @@ class WebSocketClient(object):
                     continue
             except Exception as e:
                 print_error("[WS] Sender loop error: {}".format(e))
-                self.connected = False
-                break
-
-    def _recv_loop(self):
-        while not self.stop_event.is_set() and self.connected:
-            try:
-                msg = self.ws.recv()
-                if msg == "3":
-                    # pong
-                    continue
-                elif msg.startswith("42"):
-                    try:
-                        arr = json.loads(msg[2:])
-                        event = arr[0]
-                        data = arr[1] if len(arr) > 1 else None
-                        print_debug("[WS] <- event={}, data={}".format(event, data))
-                    except Exception as e:
-                        print_error("[WS] Failed to parse 42 message: {} ({})".format(msg, e))
-                elif msg.startswith("0"):
-                    print_debug("[WS] server handshake: {}".format(msg))
-                elif msg.startswith("40"):
-                    print_debug("[WS] server confirmed namespace connect")
-                elif msg.startswith("41"):
-                    print_debug("[WS] server disconnected namespace")
-                else:
-                    print_debug("[WS] <- raw: {}".format(msg))
-            except Exception as e:
-                print_error("[WS] Receiver loop error: {}".format(e))
-                self.connected = False
+                self.disconnect() 
                 break
 
     def emit(self, event, data):
@@ -141,10 +146,5 @@ class WebSocketClient(object):
     def disconnect(self):
         print_debug("[WS] Disconnecting...")
         self.stop_event.set()
-        try:
-            if self.ws:
-                self.ws.send("41")
-                self.ws.close()
-        except Exception:
-            pass
-        self.connected = False
+        if self.ws:
+            self.ws.close()
