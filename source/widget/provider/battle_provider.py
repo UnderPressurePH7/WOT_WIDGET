@@ -6,7 +6,7 @@ from constants import  ARENA_PERIOD_NAMES
 from gui.battle_control import avatar_getter
 from items import vehicles
 from helpers.i18n import makeString
-from ..server_connect import g_serverClient
+from ..server import g_serverClient
 from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleProvider():
@@ -182,6 +182,6 @@ class BattleProvider():
         try:
             g_playerEvents.onAvatarReady -= self.onBattleSessionStart
             g_playerEvents.onAvatarBecomeNonPlayer -= self.onBattleSessionStop
-            
+            g_statsWrapper.clear_all_data()
         except Exception as e:
             print_error("[BattleProvider] Error in BattleProvider.fini: {}".format(e))

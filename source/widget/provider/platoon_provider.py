@@ -5,8 +5,7 @@ from skeletons.gui.game_control import IPlatoonController
 from items import vehicles as vehiclesUtils
 from skeletons.gui.shared.utils import IHangarSpace
 
-from ..utils import print_error, print_debug
-
+from ..utils import print_error, print_debug, g_statsWrapper
 
 class PlatoonProvider():
 
@@ -39,9 +38,37 @@ class PlatoonProvider():
         print_debug("[PlatoonProvider] Platoon updated")
         BigWorld.callback(1.0, self.updatePlatoonInfo)
 
+
+    def onSendPlayerInfo(self):
+        try:
+            from ..settings import g_config
+            from ..server import g_serverClient, ServerClient
+
+            player = BigWorld.player()
+            if player:
+                account_id = getattr(player, 'databaseID', None)
+                account_name = getattr(player, 'name', None)
+
+            print_debug("[PlatoonProvider] Sending player info to server for account ID: {}".format(account_id))
+            
+            g_statsWrapper.add_player_info(player_id=account_id, player_name=account_name)
+
+            api_key = getattr(g_config.configParams.apiKey, 'value', 'dev-test')
+            if api_key != g_serverClient.access_key:
+                print_debug("[PlatoonProvider] API key mismatch, reinitializing server client")
+                g_serverClient = None
+                g_serverClient = ServerClient(api_key)
+
+            print_debug("[PlatoonProvider] API key set to: {}".format(api_key))
+            g_serverClient.send_stats(player_id=account_id)
+        except ImportError:
+            print_debug("[PlatoonProvider] Config not available, using default API key")
+
+
     def updatePlatoonInfo(self):
         try:
             print_debug("[PlatoonProvider] updatePlatoonInfo called")
+            self.onSendPlayerInfo()
             self.isInPlatoon = self.platoon.isInPlatoon()
             self.maxSlotCount = self.platoon.getMaxSlotCount()
 

@@ -131,7 +131,7 @@ class Config(object):
 
     def _notify_config_changed(self):
         try:
-            from ..server_connect import g_serverClient
+            from ..server.server_connect import g_serverClient
 
             
             api_key_param = self.configParams.items().get('apiKey')
@@ -168,9 +168,12 @@ class Config(object):
         try:
             self._loadConfigFileToParams()
 
-            from ..server_connect import g_serverClient
+            from ..server import g_serverClient, ServerClient
             if hasattr(self, 'configParams') and hasattr(self.configParams, 'apiKey'):
-                g_serverClient.setApiKey(self.configParams.apiKey.value)
+                apiKey = self.configParams.apiKey.value
+                if apiKey != g_serverClient.access_key:
+                    g_serverClient = None
+                    g_serverClient = ServerClient(self.configParams.apiKey.value)
 
         except Exception as e:
             print_error("[Config] Error reloading config: {}".format(str(e)))
