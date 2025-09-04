@@ -44,10 +44,12 @@ class WebSocketClient(object):
     def connect(self):
         try:
             addr_info = socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM)[0]
-            self.sock = socket.socket(addr_info[0], addr_info[1], addr_info[2])
+            sock = socket.socket(addr_info[0], addr_info[1], addr_info[2])
             
             if self.secure:
-                self.sock = ssl.wrap_socket(self.sock, do_handshake_on_connect=False)
+                self.sock = ssl.wrap_socket(sock, do_handshake_on_connect=False)
+            else:
+                self.sock = sock
 
             self.sock.setblocking(False)
 
@@ -62,34 +64,42 @@ class WebSocketClient(object):
             self.worker_thread.daemon = True
             self.worker_thread.start()
             
-            self.sender_thread = threading.Thread(target=self._sender_loop)
-            self.sender_thread.daemon = True
-            self.sender_thread.start()
-
         except Exception as e:
-            print_error("[WS] Connection failed: {}".format(e))
+            print_error("[WS] Connection failed during setup: {}".format(e))
             self.close()
 
-    def _wait_for_connection(self, timeout=10):
-        read_socks, write_socks, err_socks = select.select([], [self.sock], [self.sock], timeout)
+    def _perform_connect_and_handshake(self, timeout=10.0):
+        deadline = time.time() + timeout
+        
+        # 1. Wait for TCP connection to be established
+        _, write_socks, err_socks = select.select([], [self.sock], [self.sock], timeout)
         if not write_socks:
-            raise socket.error("Connection timeout")
+            raise socket.error("TCP Connection timeout")
         err = self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
         if err != 0:
-            raise socket.error("[Errno {}]".format(err))
+            raise socket.error("TCP Connection failed with error {}".format(err))
 
-    def _do_handshake(self):
-        self._wait_for_connection()
+        # 2. Perform SSL Handshake if secure
         if self.secure:
-            try:
-                self.sock.do_handshake()
-            except ssl.SSLError as e:
-                if e.errno != ssl.SSL_ERROR_WANT_READ and e.errno != ssl.SSL_ERROR_WANT_WRITE:
+            while time.time() < deadline:
+                try:
+                    self.sock.do_handshake()
+                    break
+                except ssl.SSLError as e:
+                    if e.errno == ssl.SSL_ERROR_WANT_READ:
+                        select.select([self.sock], [], [], deadline - time.time())
+                    elif e.errno == ssl.SSL_ERROR_WANT_WRITE:
+                        select.select([], [self.sock], [], deadline - time.time())
+                    else:
+                        raise
+                except socket.error:
                     raise
+            else:
+                raise ssl.SSLError("SSL Handshake Timeout")
 
+        # 3. Perform WebSocket Handshake
         key = base64.b64encode(os.urandom(16))
         path = self._build_url_parts()
-        
         request = (
             "GET {path} HTTP/1.1\r\n"
             "Host: {host}:{port}\r\n"
@@ -102,7 +112,6 @@ class WebSocketClient(object):
         self.sock.send(request.encode('utf-8'))
         
         response = ""
-        deadline = time.time() + 10
         while time.time() < deadline:
             try:
                 chunk = self.sock.recv(4096)
@@ -113,21 +122,30 @@ class WebSocketClient(object):
             except socket.error as e:
                 if e.errno != errno.EWOULDBLOCK: raise
                 time.sleep(0.1)
-
+        
         if "101 Switching Protocols" not in response:
-            raise IOError("Handshake failed: " + response.split('\r\n')[0])
+            raise IOError("WebSocket Handshake failed: " + response.split('\r\n')[0])
 
     def _worker_loop(self):
         try:
-            self._do_handshake()
+            self._perform_connect_and_handshake()
         except Exception as e:
-            print_error("[WS] Handshake failed: {}".format(e))
+            print_error("[WS] Handshake/Connect process failed: {}".format(e))
             self.close()
             return
+        
+        if not self.sender_thread or not self.sender_thread.is_alive():
+            self.sender_thread = threading.Thread(target=self._sender_loop)
+            self.sender_thread.daemon = True
+            self.sender_thread.start()
             
         buffer = bytearray()
         while not self.stop_event.is_set():
             try:
+                r, _, _ = select.select([self.sock], [], [], 0.1)
+                if not r:
+                    continue
+                
                 chunk = self.sock.recv(8192)
                 if not chunk:
                     break
@@ -149,15 +167,9 @@ class WebSocketClient(object):
                         offset = 10
                     
                     if len(buffer) < offset + payload_len: break
-
                     payload = buffer[offset:offset + payload_len]
                     buffer = buffer[offset + payload_len:]
                     self._handle_frame(opcode, payload)
-            except socket.error as e:
-                if e.errno == errno.EWOULDBLOCK:
-                    time.sleep(0.01)
-                    continue
-                break
             except Exception:
                 break
         self.close()
@@ -196,6 +208,7 @@ class WebSocketClient(object):
         self.close()
 
     def _send_frame(self, opcode, payload):
+        if not self.sock: return
         header = bytearray()
         header.append(0x80 | opcode)
         
@@ -236,15 +249,15 @@ class WebSocketClient(object):
             print_error("[WS] Send queue is full")
 
     def close(self):
+        if self.stop_event.is_set():
+            return
+        self.stop_event.set()
         self.is_connected = False
-        if not self.stop_event.is_set():
-            self.stop_event.set()
+        
         if self.sock:
             try:
-                if self.is_connected:
-                    self._send_frame(0x8, b'')
+                self.sock.close()
             except:
                 pass
             finally:
-                self.sock.close()
                 self.sock = None
