@@ -1,150 +1,250 @@
 # -*- coding: utf-8 -*-
-import websocket
-import threading
-import json
-import time
+import socket
 import ssl
+import threading
+import time
+import json
+import base64
+import os
+import errno
+import select
 import Queue as queue
 from .utils import print_error, print_debug
 
-MAX_PAYLOAD_SIZE = 2 * 1024 * 1024
-
-
 class WebSocketClient(object):
-    def __init__(self, host, port=443, secure=True, api_key=None, secret_key=None, player_id=None):
+
+    def __init__(self, host, port=443, secure=True, api_key=None, secret_key=None, player_id=None, message_callback=None):
         self.host = host
         self.port = port
         self.secure = secure
         self.api_key = api_key
         self.secret_key = secret_key
         self.player_id = player_id
-
-        self.ws = None
+        self.message_callback = message_callback
+        
+        self.sock = None
+        self.is_connected = False
+        self.stop_event = threading.Event()
         self.worker_thread = None
         self.sender_thread = None
         
-        self.connected = False
-        self.stop_event = threading.Event()
-        self.queue = queue.Queue(maxsize=100)
+        self.send_queue = queue.Queue(maxsize=100)
+        self.ping_interval = 20.0
 
-        self.ping_interval = 25
-        self.ping_timeout = 5
-
-    def _build_url(self):
-        scheme = "wss" if self.secure else "ws"
-        query = "EIO=4&transport=websocket"
+    def _build_url_parts(self):
+        path = "/socket.io/?EIO=4&transport=websocket"
         if self.secret_key:
-            query += "&secretKey={}".format(self.secret_key)
+            path += "&secretKey=" + self.secret_key
         elif self.api_key:
-            query += "&key={}".format(self.api_key)
+            path += "&key=" + self.api_key
         if self.player_id:
-            query += "&playerId={}".format(self.player_id)
-        return "{}://{}:{}/socket.io/?{}".format(scheme, self.host, self.port, query)
+            path += "&playerId=" + self.player_id
+        return path
 
     def connect(self):
-        url = self._build_url()
-        print_debug("[WS] Connecting to {}".format(url))
-        
-        self.ws = websocket.WebSocketApp(
-            url,
-            on_open=self._on_open,
-            on_message=self._on_message,
-            on_error=self._on_error,
-            on_close=self._on_close
-        )
-        
-        self.worker_thread = threading.Thread(
-            target=self.ws.run_forever,
-            kwargs={'sslopt': {"cert_reqs": ssl.CERT_NONE}}
-        )
-        self.worker_thread.daemon = True
-        self.worker_thread.start()
+        try:
+            addr_info = socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM)[0]
+            self.sock = socket.socket(addr_info[0], addr_info[1], addr_info[2])
+            
+            if self.secure:
+                self.sock = ssl.wrap_socket(self.sock, do_handshake_on_connect=False)
 
-    def _on_open(self, ws):
-        print_debug("[WS] Connection opened")
+            self.sock.setblocking(False)
 
-        
-    def _on_message(self, ws, msg):
-        if msg.startswith("0"):  
             try:
-                data = json.loads(msg[1:])
-                self.ping_interval = int(data.get("pingInterval", 25000)) / 1000.0
-                self.ping_timeout = int(data.get("pingTimeout", 5000)) / 1000.0
-                print_debug("[WS] Handshake ok, sid={}, ping={}s".format(data.get('sid'), self.ping_interval))
-                
-                ws.send("40")
-                print_debug("[WS] Namespace connect sent")
+                self.sock.connect(addr_info[4])
+            except socket.error as e:
+                if e.errno != errno.EINPROGRESS and e.errno != errno.EWOULDBLOCK:
+                    raise
 
-                self.connected = True
-                self.stop_event.clear()
-                self.sender_thread = threading.Thread(target=self._sender_loop)
-                self.sender_thread.daemon = True
-                self.sender_thread.start()
-            except Exception as e:
-                print_error("[WS] Failed to parse handshake: {} ({})".format(msg, e))
+            self.stop_event.clear()
+            self.worker_thread = threading.Thread(target=self._worker_loop)
+            self.worker_thread.daemon = True
+            self.worker_thread.start()
+            
+            self.sender_thread = threading.Thread(target=self._sender_loop)
+            self.sender_thread.daemon = True
+            self.sender_thread.start()
 
-        elif msg == "3":  
+        except Exception as e:
+            print_error("[WS] Connection failed: {}".format(e))
+            self.close()
+
+    def _wait_for_connection(self, timeout=10):
+        read_socks, write_socks, err_socks = select.select([], [self.sock], [self.sock], timeout)
+        if not write_socks:
+            raise socket.error("Connection timeout")
+        err = self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        if err != 0:
+            raise socket.error("[Errno {}]".format(err))
+
+    def _do_handshake(self):
+        self._wait_for_connection()
+        if self.secure:
+            try:
+                self.sock.do_handshake()
+            except ssl.SSLError as e:
+                if e.errno != ssl.SSL_ERROR_WANT_READ and e.errno != ssl.SSL_ERROR_WANT_WRITE:
+                    raise
+
+        key = base64.b64encode(os.urandom(16))
+        path = self._build_url_parts()
+        
+        request = (
+            "GET {path} HTTP/1.1\r\n"
+            "Host: {host}:{port}\r\n"
+            "Upgrade: websocket\r\n"
+            "Connection: Upgrade\r\n"
+            "Sec-WebSocket-Key: {key}\r\n"
+            "Sec-WebSocket-Version: 13\r\n\r\n"
+        ).format(path=path, host=self.host, port=self.port, key=key)
+        
+        self.sock.send(request.encode('utf-8'))
+        
+        response = ""
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            try:
+                chunk = self.sock.recv(4096)
+                if not chunk: break
+                response += chunk.decode('utf-8')
+                if "\r\n\r\n" in response:
+                    break
+            except socket.error as e:
+                if e.errno != errno.EWOULDBLOCK: raise
+                time.sleep(0.1)
+
+        if "101 Switching Protocols" not in response:
+            raise IOError("Handshake failed: " + response.split('\r\n')[0])
+
+    def _worker_loop(self):
+        try:
+            self._do_handshake()
+        except Exception as e:
+            print_error("[WS] Handshake failed: {}".format(e))
+            self.close()
             return
-        
-        elif msg.startswith("42"): 
+            
+        buffer = bytearray()
+        while not self.stop_event.is_set():
             try:
-                arr = json.loads(msg[2:])
-                event = arr[0]
-                data = arr[1] if len(arr) > 1 else None
-                print_debug("[WS] <- event={}, data={}".format(event, data))
-            except Exception as e:
-                print_error("[WS] Failed to parse event: {} ({})".format(msg, e))
+                chunk = self.sock.recv(8192)
+                if not chunk:
+                    break
+                buffer.extend(chunk)
+                
+                while len(buffer) > 2:
+                    opcode = buffer[0] & 0x0F
+                    payload_len = buffer[1] & 0x7F
+                    offset = 2
+                    if payload_len == 126:
+                        if len(buffer) < 4: break
+                        payload_len = (buffer[2] << 8) | buffer[3]
+                        offset = 4
+                    elif payload_len == 127:
+                        if len(buffer) < 10: break
+                        payload_len = 0
+                        for i in range(8):
+                            payload_len = (payload_len << 8) | buffer[2 + i]
+                        offset = 10
+                    
+                    if len(buffer) < offset + payload_len: break
 
-        elif msg.startswith("40"):
-            print_debug("[WS] Server confirmed namespace connect")
+                    payload = buffer[offset:offset + payload_len]
+                    buffer = buffer[offset + payload_len:]
+                    self._handle_frame(opcode, payload)
+            except socket.error as e:
+                if e.errno == errno.EWOULDBLOCK:
+                    time.sleep(0.01)
+                    continue
+                break
+            except Exception:
+                break
+        self.close()
 
-        else:
-            print_debug("[WS] <- raw: {}".format(msg))
-    
-    def _on_error(self, ws, error):
-        print_error("[WS] Connection error: {}".format(error))
-        self.connected = False
-        self.stop_event.set()
-
-    def _on_close(self, ws, close_status_code, close_msg):
-        print_debug("[WS] Connection closed")
-        self.connected = False
-        self.stop_event.set()
+    def _handle_frame(self, opcode, payload):
+        if opcode == 0x1: # TEXT
+            msg = payload.decode('utf-8')
+            if msg.startswith('0'):
+                data = json.loads(msg[1:])
+                self.ping_interval = float(data.get('pingInterval', 25000)) / 1000.0
+                self.is_connected = True
+                self.emit_raw('40')
+            elif self.message_callback:
+                self.message_callback(msg)
+        elif opcode == 0x8: # CLOSE
+            self.is_connected = False
+        elif opcode == 0x9: # PING
+            self._send_frame(0xA, payload)
 
     def _sender_loop(self):
         last_ping = time.time()
         while not self.stop_event.is_set():
             try:
-                if time.time() - last_ping > self.ping_interval:
-                    self.ws.send("2")
-                    last_ping = time.time()
-
+                if self.is_connected:
+                    if time.time() - last_ping > self.ping_interval:
+                        self.emit_raw('2')
+                        last_ping = time.time()
                 try:
-                    event, data = self.queue.get(timeout=0.1)
-                    payload = '42{}'.format(json.dumps([event, data]))
-                    if len(payload) > MAX_PAYLOAD_SIZE:
-                        print_error("[WS] Payload too big, skipped")
-                        continue
-                    self.ws.send(payload)
-                    print_debug("[WS] -> emit {}".format(event))
+                    payload = self.send_queue.get(timeout=0.1)
+                    if self.is_connected:
+                        self._send_frame(0x1, payload)
                 except queue.Empty:
                     continue
-            except Exception as e:
-                print_error("[WS] Sender loop error: {}".format(e))
-                self.disconnect() 
+            except Exception:
                 break
+        self.close()
+
+    def _send_frame(self, opcode, payload):
+        header = bytearray()
+        header.append(0x80 | opcode)
+        
+        if isinstance(payload, unicode):
+            payload = payload.encode('utf-8')
+
+        length = len(payload)
+        mask = bytearray(os.urandom(4))
+        
+        if length <= 125:
+            header.append(length | 0x80)
+        elif length <= 65535:
+            header.append(126 | 0x80)
+            header.append((length >> 8) & 0xFF)
+            header.append(length & 0xFF)
+        else:
+            header.append(127 | 0x80)
+            for i in range(8):
+                header.append((length >> (56 - i * 8)) & 0xFF)
+        
+        masked_payload = bytearray(payload)
+        for i in range(len(masked_payload)):
+            masked_payload[i] ^= mask[i % 4]
+        
+        self.sock.sendall(header + mask + masked_payload)
 
     def emit(self, event, data):
-        if not self.connected:
-            print_error("[WS] Not connected, cannot emit")
-            return
         try:
-            self.queue.put((event, data), timeout=0.1)
+            payload = '42' + json.dumps([event, data])
+            self.send_queue.put(payload, timeout=0.1)
         except queue.Full:
-            print_error("[WS] Local send queue full, dropping")
+            print_error("[WS] Send queue is full")
 
-    def disconnect(self):
-        print_debug("[WS] Disconnecting...")
-        self.stop_event.set()
-        if self.ws:
-            self.ws.close()
+    def emit_raw(self, payload):
+        try:
+            self.send_queue.put(payload, timeout=0.1)
+        except queue.Full:
+            print_error("[WS] Send queue is full")
+
+    def close(self):
+        self.is_connected = False
+        if not self.stop_event.is_set():
+            self.stop_event.set()
+        if self.sock:
+            try:
+                if self.is_connected:
+                    self._send_frame(0x8, b'')
+            except:
+                pass
+            finally:
+                self.sock.close()
+                self.sock = None
