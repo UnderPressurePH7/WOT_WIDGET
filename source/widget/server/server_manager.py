@@ -1,5 +1,5 @@
 import threading
-from source.widget.utils import print_debug, print_error
+from ..utils import print_debug, print_error
 
 
 class ServerManager(object):
