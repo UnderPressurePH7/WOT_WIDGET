@@ -100,6 +100,14 @@ class BattleProvider():
 
     def onBattleSessionStart(self):
         try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[BattleProvider] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[BattleProvider] ImportError occurred")
+            return
+        try:
             self.setArena()
             if not self.arena:
                 print_debug("[BattleProvider] Arena not ready, battle session start delayed")

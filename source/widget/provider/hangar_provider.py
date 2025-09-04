@@ -24,6 +24,14 @@ class HangarProvider(object):
         print_debug("[HangarProvider] Initialized")
 
     def onAccountShowGUI(self, *args):
+        try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[HangarProvider] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[HangarProvider] ImportError occurred")
+            return
         print_debug("[HangarProvider] Account GUI shown")
         player = BigWorld.player()
         if player:

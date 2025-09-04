@@ -19,6 +19,15 @@ class BattleResultsProvider(object):
             self.results_cache.append(arenaUniqueID)
 
     def checkResultsCache(self):
+        try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[BattleResultsProvider] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[BattleResultsProvider] ImportError occurred")
+            return
+        
         BigWorld.callback(1.0, self.checkResultsCache)
 
         if not hasattr(BigWorld.player(), 'battleResultsCache'):
@@ -34,6 +43,15 @@ class BattleResultsProvider(object):
                 print_error("[BattleResultsProvider] battleResultsCache error: {}".format(e))
 
     def onBattleResultsReceived(self, isPlayerVehicle, results):
+        try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[BattleResultsProvider] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[BattleResultsProvider] ImportError occurred")
+            return
+        
         print_debug("[BattleResultsProvider] onBattleResultsReceived called.")
         if not isPlayerVehicle or BattleReplay.isPlaying():
             return

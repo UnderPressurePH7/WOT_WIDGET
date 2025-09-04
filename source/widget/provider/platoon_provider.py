@@ -61,6 +61,14 @@ class PlatoonProvider():
 
     def updatePlatoonInfo(self):
         try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[PlatoonProvider] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[PlatoonProvider] ImportError occurred")
+            return
+        try:
             print_debug("[PlatoonProvider] updatePlatoonInfo called")
             self.onSendPlayerInfo()
             self.isInPlatoon = self.platoon.isInPlatoon()

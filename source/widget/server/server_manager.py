@@ -32,6 +32,15 @@ class ServerManager(object):
     
     def _recreate_client(self, api_key):
         try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[ServerManager] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[ServerManager] ImportError occurred")
+            return
+        
+        try:
             if self._client:
                 try:
                     self._client.disconnect()
@@ -50,6 +59,15 @@ class ServerManager(object):
             self._current_api_key = None
     
     def send_stats(self, player_id=None):
+        try:
+            from ..settings import g_config
+            if not g_config.configParams.enabled.value:
+                print_debug("[ServerManager] Mod disabled, skipping battle session start")
+                return
+        except ImportError:
+            print_debug("[ServerManager] ImportError occurred")
+            return
+
         client = self.get_client()
         if client:
             return client.send_stats(player_id=player_id)
