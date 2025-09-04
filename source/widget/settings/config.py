@@ -131,16 +131,11 @@ class Config(object):
 
     def _notify_config_changed(self):
         try:
-            from ..server.server_connect import g_serverClient, ServerClient
+            from ..server import g_serverManager
 
-            
-            api_key_param = self.get_api_key()
-            if api_key_param:
-                g_serverClient.disconnect()
-                g_serverClient = None
-                g_serverClient = ServerClient(api_key=api_key_param)
-                g_serverClient.send_stats()
-                print_debug("[Config] Config change notification sent")
+            result =  g_serverManager.send_stats()
+            if result:
+                print_debug("[Config] Stats sent successfully after config change")
         except Exception as e:
             print_error("[Config] Error notifying config change: {}".format(str(e)))
 
