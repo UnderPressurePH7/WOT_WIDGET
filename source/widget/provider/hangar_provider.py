@@ -43,6 +43,7 @@ class HangarProvider(object):
             api_key = g_config.get_api_key()
             if api_key != g_serverClient.access_key:
                 print_debug("[HangarProvider] API key mismatch, reinitializing server client")
+                g_serverClient.disconnect()
                 g_serverClient = None
                 g_serverClient = ServerClient(api_key)
             
