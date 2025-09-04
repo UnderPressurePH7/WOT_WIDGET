@@ -1,6 +1,5 @@
-import logging
 from .translations import Translator
-from ..utils import print_error, print_debug
+from ..utils import print_error
 
 PARAM_REGISTRY = {}
 
@@ -166,7 +165,7 @@ class CheckboxParameter(BaseParameter):
             "varName": self.tokenName,
             "value": self.defaultMsaValue,
             "tooltip": createTooltip(
-                header=="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
                 body=body,
                 note=note,
                 attention=attention
@@ -343,10 +342,19 @@ class DropdownParameter(BaseParameter):
         self.options = options
 
     def toMsaValue(self, value):
-        return self.getOptionByValue(value).msaValue
+        for i, option in enumerate(self.options):
+            if option.value == value:
+                return i
+        return 0
 
     def fromMsaValue(self, msaValue):
-        return self.getOptionByMsaValue(msaValue).value
+        try:
+            index = int(msaValue)
+            if 0 <= index < len(self.options):
+                return self.options[index].value
+        except (ValueError, TypeError):
+            pass
+        return self.defaultValue
 
     def toJsonValue(self, value):
         return toJson(value)
@@ -362,15 +370,20 @@ class DropdownParameter(BaseParameter):
         return foundOptions[0] if len(foundOptions) > 0 else None
 
     def getOptionByMsaValue(self, msaValue):
-        foundOptions = filter(lambda option: option.msaValue == msaValue, self.options)
-        return foundOptions[0] if len(foundOptions) > 0 else None
+        try:
+            index = int(msaValue)
+            if 0 <= index < len(self.options):
+                return self.options[index]
+        except (ValueError, TypeError):
+            pass
+        return self.getOptionByValue(self.defaultValue)
 
     def renderParam(self, header, body=None, note=None, attention=None):
         return {
             "type": "Dropdown",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self.toMsaValue(self.defaultValue),
             "options": [
                 {"label": option.displayName} for option in self.options
             ],
@@ -391,12 +404,12 @@ class RadioButtonGroupParameter(DropdownParameter):
             "type": "RadioButtonGroup",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self.toMsaValue(self.defaultValue),
             "options": [
                 {"label": option.displayName} for option in self.options
             ],
             "tooltip": createTooltip(
-                header="%s (%s: %s)" %  (header, Translator.DEFAULT_VALUE, self.getOptionByValue(self.defaultValue).displayName),
+                header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.getOptionByValue(self.defaultValue).displayName),
                 body=body,
                 note=note,
                 attention=attention
@@ -489,7 +502,7 @@ class RangeSliderParameter(BaseParameter):
         self.step = step
         self.divisionStep = divisionStep or step
         self.minRangeDistance = minRangeDistance
-        self.divisionLabelStep = divisionLabelStep or divisionStep
+        self.divisionLabelStep = divisionLabelStep or self.divisionStep
         self.divisionLabelPostfix = divisionLabelPostfix
 
     def toMsaValue(self, value):
