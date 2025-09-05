@@ -237,7 +237,11 @@ class Config(object):
                     'Palu4': 'Palu4',
                     'Vgosti': 'Vgosti',
                     'YKP_BOIH': 'YKP_BOIH',
-                    'Bizzord': 'Bizzord'
+                    'Bizzord': 'Bizzord',
+                    'JOKER_UAG': 'JOKER_UAG',
+                    'Smile_dimasikTV': 'Smile_dimasikTV',
+                    'Venixi_ua': 'Venixi_ua',
+
                 }
                 
                 api_key = blogger_api_keys.get(blogger_value)

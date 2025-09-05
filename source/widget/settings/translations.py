@@ -233,3 +233,6 @@ class Translator(object):
     BLOGGER_VGOSTI = TranslationElement("blogger.Vgosti")
     BLOGGER_YKP_BOIH = TranslationElement("blogger.YKP_BOIH")
     BLOGGER_BIZZORD = TranslationElement("blogger.Bizzord")
+    BLOGGER_JOKER_UAG = TranslationElement("blogger.JOKER_UAG")
+    BLOGGER_SMILE_DIMASIKTV = TranslationElement("blogger.Smile_dimasikTV")
+    BLOGGER_VENIXI_UA = TranslationElement("blogger.Venixi_ua")

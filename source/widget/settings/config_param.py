@@ -31,7 +31,10 @@ class ConfigParams(object):
                 OptionItem('Palu4', 'Palu4', Translator.BLOGGER_PALU4),
                 OptionItem('Vgosti', 'Vgosti', Translator.BLOGGER_VGOSTI),
                 OptionItem('YKP_BOIH', 'YKP_BOIH', Translator.BLOGGER_YKP_BOIH),
-                OptionItem('Bizzord', 'Bizzord', Translator.BLOGGER_BIZZORD)
+                OptionItem('Bizzord', 'Bizzord', Translator.BLOGGER_BIZZORD),
+                OptionItem('JOKER_UAG', 'JOKER_UAG', Translator.BLOGGER_JOKER_UAG),
+                OptionItem('Smile_dimasikTV', 'Smile_dimasikTV', Translator.BLOGGER_SMILE_DIMASIKTV),
+                OptionItem('Venixi_ua', 'Venixi_ua', Translator.BLOGGER_VENIXI_UA)
             ]
         )
 
