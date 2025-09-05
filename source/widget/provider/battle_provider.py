@@ -146,6 +146,9 @@ class BattleProvider():
     def onBattleSessionStop(self):
         try:
             if self.arena:
+                if self.guiType != 1:
+                    print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session stop".format(self.guiType))
+                    return
                 self.arena.onVehicleKilled -= self.onVehicleKilled
                 self.arena.onVehicleHealthChanged -= self.onVehicleHealthChanged
                 self.arena.onPeriodChange -= self.onPeriodChange
@@ -167,6 +170,9 @@ class BattleProvider():
     def onPeriodChange(self, period, periodEndTime, periodLength, periodAdditionalInfo, *args):
         period_name = ARENA_PERIOD_NAMES[period]
         if period_name == "PREBATTLE":
+            if self.guiType != 1:
+                print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session start".format(self.guiType))
+                return
             g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
             g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
             result = g_serverManager.send_stats(player_id=self.playerID)
