@@ -68,6 +68,11 @@ class BattleResultsProvider(object):
             arenaUniqueID = results.get('arenaUniqueID')
             common = results.get('common', {})
             
+            guiType = common.get('guiType', None)
+            if guiType != 1:
+                print_debug("[BattleResultsProvider] Unsupported game mode (guiType: {}), skipping results processing".format(guiType))
+                return
+
             personal = results.get('personal', {})
             if 'avatar' in personal:
                 personal = personal['avatar']

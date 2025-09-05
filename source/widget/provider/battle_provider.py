@@ -16,6 +16,7 @@ class BattleProvider():
         self.isBattle = False
         self.arena = None
         self.arenaUniqueID = None
+        self.guiType = None
         self.playerID= None
         g_playerEvents.onAvatarReady += self.onBattleSessionStart
         g_playerEvents.onAvatarBecomeNonPlayer += self.onBattleSessionStop
@@ -112,7 +113,11 @@ class BattleProvider():
             if not self.arena:
                 print_debug("[BattleProvider] Arena not ready, battle session start delayed")
                 return
-                
+            
+            self.guiType = getattr(self.arena, 'guiType', None)
+            if self.guiType != 1:
+                print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session start".format(self.guiType))
+                return
             self.arenaUniqueID = getattr(self.arena, 'arenaUniqueID', 0)
             self.playerID = self.getAccountDatabaseID()
 
