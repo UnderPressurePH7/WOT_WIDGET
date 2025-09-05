@@ -43,14 +43,12 @@ class Config(object):
 
             self.configTemplate.add_parameter_to_column1(
                 "tournamentType",
-                value = self.configFile._loaded_config_data.get("tournamentType"),
                 header=Translator.TOURNAMENT_TYPE_HEADER,
                 body=Translator.TOURNAMENT_TYPE_BODY
             )
             
             self.configTemplate.add_parameter_to_column1(
                 "apiKey",
-                value = self.configFile._loaded_config_data.get("apiKey"),
                 header=Translator.API_KEY_HEADER,
                 body=Translator.API_KEY_BODY
             )
@@ -61,7 +59,6 @@ class Config(object):
 
             self.configTemplate.add_parameter_to_column2(
                 "chooseBlogger",
-                value = self.configFile._loaded_config_data.get("chooseBlogger"),
                 header=Translator.CHOOSE_BLOGGER_HEADER,
                 body=Translator.CHOOSE_BLOGGER_BODY
             )

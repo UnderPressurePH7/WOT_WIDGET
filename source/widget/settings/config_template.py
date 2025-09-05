@@ -24,13 +24,12 @@ class Template(object):
             self.column2_items.append(item)
         return self
 
-    def add_parameter_to_column1(self, param_name, value, header=None, body=None, note=None, attention=None):
+    def add_parameter_to_column1(self, param_name, header=None, body=None, note=None, attention=None):
         if hasattr(self.config_params, param_name):
             param = getattr(self.config_params, param_name)
             if hasattr(param, 'renderParam'):
                 rendered_param = param.renderParam(
                     header=header or param.name.title(),
-                    value=value,
                     body=body,
                     note=note,
                     attention=attention
@@ -38,13 +37,11 @@ class Template(object):
                 self.add_to_column1(rendered_param)
         return self
 
-    def add_parameter_to_column2(self, param_name, value, header=None, body=None, note=None, attention=None):
+    def add_parameter_to_column2(self, param_name, header=None, body=None, note=None, attention=None):
         if hasattr(self.config_params, param_name):
             param = getattr(self.config_params, param_name)
             if hasattr(param, 'renderParam'):
                 rendered_param = param.renderParam(
-                    header=header or param.name.title(),
-                    value=value,
                     body=body,
                     note=note,
                     attention=attention

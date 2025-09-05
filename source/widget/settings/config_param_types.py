@@ -223,11 +223,12 @@ class FloatTextInputParameter(BaseParameter):
         return clamp(self.minValue, rawValue, self.maxValue)
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -245,12 +246,13 @@ class StepperParameter(NumericParameter):
                                            minValue, step, maxValue,
                                            defaultValue, disabledValue)
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "NumericStepper",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -270,11 +272,12 @@ class SliderParameter(NumericParameter):
         self.format_str = format_str
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "Slider",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -306,11 +309,12 @@ class ColorParameter(BaseParameter):
         return toColorTuple(jsonValue)
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "ColorChoice",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "tooltip": createTooltip(
                 header="%s (%s: #%s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -380,11 +384,12 @@ class DropdownParameter(BaseParameter):
         return self.getOptionByValue(self.defaultValue)
 
     def renderParam(self, header, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "Dropdown",
             "text": header,
             "varName": self.tokenName,
-            "value": self.toMsaValue(self.defaultValue),
+            "value": current_value,
             "options": [
                 {"label": option.displayName} for option in self.options
             ],
@@ -401,11 +406,12 @@ class DropdownParameter(BaseParameter):
 class RadioButtonGroupParameter(DropdownParameter):
 
     def renderParam(self, header, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "RadioButtonGroup",
             "text": header,
             "varName": self.tokenName,
-            "value": self.toMsaValue(self.defaultValue),
+            "value": current_value,
             "options": [
                 {"label": option.displayName} for option in self.options
             ],
@@ -443,11 +449,12 @@ class TextInputParameter(BaseParameter):
         return value
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -478,11 +485,12 @@ class HotkeyParameter(BaseParameter):
         return jsonValue if isinstance(jsonValue, list) else []
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "HotKey",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "tooltip": createTooltip(
                 header="%s" % header,
                 body=body,
@@ -525,11 +533,12 @@ class RangeSliderParameter(BaseParameter):
         return self.fromMsaValue(jsonValue)
 
     def renderParam(self, header, value, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "RangeSlider",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
