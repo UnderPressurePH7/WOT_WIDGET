@@ -198,6 +198,6 @@ class BattleProvider():
             g_playerEvents.onAvatarReady -= self.onBattleSessionStart
             g_playerEvents.onAvatarBecomeNonPlayer -= self.onBattleSessionStop
             g_statsWrapper.clear_all_data()
-            g_serverManager.disconnect()
+            g_serverManager.force_cleanup()
         except Exception as e:
             print_error("[BattleProvider] Error in BattleProvider.fini: {}".format(e))

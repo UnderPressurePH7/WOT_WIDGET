@@ -368,13 +368,28 @@ class ServerClient(object):
         
         try:
             if self._sender_thread and self._sender_thread.is_alive():
-                self._sender_thread.join(timeout=2.0)
-        except Exception:
-            pass
+                print_debug("[WS] Waiting for sender thread to finish...")
+                self._sender_thread.join(timeout=3.0)
+                if self._sender_thread.is_alive():
+                    print_error("[WS] Sender thread did not terminate within timeout")
+        except Exception as e:
+            print_error("[WS] Error waiting for sender thread: {}".format(e))
             
         self._ws = None
         self._connected = False
         print_debug("[WS] Disconnected")
 
     def fini(self):
+        print_debug("[WS] Finalizing...")
         self.disconnect()
+        
+
+        try:
+            while not self._queue.empty():
+                try:
+                    self._queue.get_nowait()
+                    self._queue.task_done()
+                except:
+                    break
+        except Exception as e:
+            print_error("[WS] Error clearing queue: {}".format(e))
