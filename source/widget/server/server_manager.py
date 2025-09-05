@@ -9,29 +9,63 @@ class ServerManager(object):
         self._current_api_key = None
         self._lock = threading.Lock()
         self._cleanup_timeout = 5.0
-    
-    def get_client(self, required_api_key=None):
+
+    def get_client(self, required_api_key):
         with self._lock:
-            try:
-                if required_api_key is None:
-                    try:
-                        from ..settings import g_config
-                        required_api_key = g_config.get_api_key()
-                    except:
-                        required_api_key = 'dev-test'
+            try:                
+                if self._can_reuse_client(required_api_key):
+                    print_debug("[ServerManager] Reusing existing client with API key: {}".format(required_api_key))
+                    return self._client
                 
-                if (self._client is None or 
-                    self._current_api_key != required_api_key or
-                    not getattr(self._client, 'is_connected', False)):
-                    
-                    self._recreate_client(required_api_key)
-                
+                print_debug("[ServerManager] Creating new client, reason: {}".format(
+                    self._get_recreation_reason(required_api_key)))
+                self._recreate_client(required_api_key)
                 return self._client
                 
             except Exception as e:
                 print_error("[ServerManager] Error getting client: {}".format(e))
                 return None
+
+    def _can_reuse_client(self, required_api_key):
+        if self._client is None:
+            return False
+        
+        if self._current_api_key != required_api_key:
+            return False
+        
+        if not hasattr(self._client, 'is_connected'):
+            return False
+            
+        if not getattr(self._client, 'is_connected', False):
+            return False
+        
+        if hasattr(self._client, '_ws') and self._client._ws:
+            if not getattr(self._client._ws, 'is_connected', False):
+                return False
+        
+        if hasattr(self._client, '_sender_thread'):
+            if not self._client._sender_thread or not self._client._sender_thread.is_alive():
+                return False
+        
+        return True
+
+    def _get_recreation_reason(self, required_api_key):
+        if self._client is None:
+            return "no client exists"
+        
+        if self._current_api_key != required_api_key:
+            return "API key changed from '{}' to '{}'".format(self._current_api_key, required_api_key)
+        if not getattr(self._client, 'is_connected', False):
+            return "client not connected"
+        if hasattr(self._client, '_ws') and self._client._ws:
+            if not getattr(self._client._ws, 'is_connected', False):
+                return "WebSocket not connected"
+        if hasattr(self._client, '_sender_thread'):
+            if not self._client._sender_thread or not self._client._sender_thread.is_alive():
+                return "sender thread not alive"
+        return "unknown reason"
     
+
     def _recreate_client(self, api_key):
         try:
             from ..settings import g_config
@@ -102,8 +136,13 @@ class ServerManager(object):
         except ImportError:
             print_debug("[ServerManager] ImportError occurred")
             return {'success': False, 'message': 'Config unavailable'}
+        
+        try:
+            required_api_key = g_config.get_api_key()
+        except:
+            required_api_key = 'dev-test'
 
-        client = self.get_client()
+        client = self.get_client(required_api_key)
         if client:
             return client.send_stats(player_id=player_id)
         else:
