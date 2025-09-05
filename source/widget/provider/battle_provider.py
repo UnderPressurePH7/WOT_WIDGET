@@ -7,6 +7,7 @@ from gui.battle_control import avatar_getter
 from items import vehicles
 from helpers.i18n import makeString
 from ..server import g_serverManager
+from ..settings import g_config
 from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleProvider():
@@ -101,7 +102,6 @@ class BattleProvider():
 
     def onBattleSessionStart(self):
         try:
-            from ..settings import g_config
             if not g_config.configParams.enabled.value:
                 print_debug("[BattleProvider] Mod disabled, skipping battle session start")
                 return
@@ -183,8 +183,6 @@ class BattleProvider():
     
     def onVehicleKilled(self, target_id, attacker_id, reason, is_respawn, *args):
         try:
-            from ..settings import g_config
-
             if attacker_id > 0 and self.isCurrentPlayer(attacker_id):
                 
                 g_statsWrapper.add_kills(self.arenaUniqueID, self.playerID, 1)
@@ -201,8 +199,7 @@ class BattleProvider():
 
     def onVehicleHealthChanged(self, target_id, attacker_id, damage):
         try:
-            from ..settings import g_config
-            
+                        
             if damage > 0 and self.isCurrentPlayer(attacker_id):
                 actual_damage = max(0, damage)
                 g_statsWrapper.add_damage(self.arenaUniqueID, self.playerID, actual_damage)

@@ -3,6 +3,7 @@ from PlayerEvents import g_playerEvents
 import BattleReplay
 from items import vehicles
 from ..server import g_serverManager
+from ..settings import g_config
 from ..utils import print_error, print_debug, g_statsWrapper
 
 
@@ -20,7 +21,6 @@ class BattleResultsProvider(object):
 
     def checkResultsCache(self):
         try:
-            from ..settings import g_config
             if not g_config.configParams.enabled.value:
                 print_debug("[BattleResultsProvider] Mod disabled, skipping battle session start")
                 return
@@ -44,7 +44,6 @@ class BattleResultsProvider(object):
 
     def onBattleResultsReceived(self, isPlayerVehicle, results):
         try:
-            from ..settings import g_config
             if not g_config.configParams.enabled.value:
                 print_debug("[BattleResultsProvider] Mod disabled, skipping battle session start")
                 return
