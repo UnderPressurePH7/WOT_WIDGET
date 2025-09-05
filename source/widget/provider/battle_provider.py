@@ -128,7 +128,15 @@ class BattleProvider():
                 print_debug("[BattleProvider]Player ID not available, retrying...")
                 BigWorld.callback(2.0, self.onBattleSessionStart)
                 return
-    
+
+            g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
+            g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
+            result = g_serverManager.send_stats(player_id=self.playerID)
+            if result:
+                print_debug("[BattleProvider] Battle started info sent successfully for Player ID: {}".format(self.playerID))
+            else:
+                print_debug("[BattleProvider] Failed to send battle started info for Player ID: {}".format(self.playerID))
+
             if hasattr(self.arena, 'onVehicleKilled'):
                 self.arena.onVehicleKilled += self.onVehicleKilled
             if hasattr(self.arena, 'onVehicleHealthChanged'):
@@ -171,13 +179,14 @@ class BattleProvider():
     def onPeriodChange(self, period, periodEndTime, periodLength, periodAdditionalInfo, *args):
         period_name = ARENA_PERIOD_NAMES[period]
         if period_name == "PREBATTLE":
-            g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
-            g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
-            result = g_serverManager.send_stats(player_id=self.playerID)
-            if result:
-                print_debug("[BattleProvider] Battle started info sent successfully for Player ID: {}".format(self.playerID))
-            else:
-                print_debug("[BattleProvider] Failed to send battle started info for Player ID: {}".format(self.playerID))
+            pass
+            # g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
+            # g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
+            # result = g_serverManager.send_stats(player_id=self.playerID)
+            # if result:
+            #     print_debug("[BattleProvider] Battle started info sent successfully for Player ID: {}".format(self.playerID))
+            # else:
+            #     print_debug("[BattleProvider] Failed to send battle started info for Player ID: {}".format(self.playerID))
     
     def onVehicleKilled(self, target_id, attacker_id, reason, is_respawn, *args):
         try:
