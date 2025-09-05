@@ -207,6 +207,7 @@ class BattleProvider():
                 actual_damage = max(0, damage)
                 g_statsWrapper.add_damage(self.arenaUniqueID, self.playerID, actual_damage)
                 g_statsWrapper.add_points(self.arenaUniqueID, self.playerID, actual_damage)
+                print_debug("[BattleProvider] g_config.configParams.tournamentType.value: {}".format(g_config.configParams.tournamentType.value))
                 if g_config.configParams.tournamentType.value == 'platoon':
                     result = g_serverManager.send_stats(player_id=self.playerID)
                     if result:
