@@ -42,6 +42,7 @@ class Template(object):
             param = getattr(self.config_params, param_name)
             if hasattr(param, 'renderParam'):
                 rendered_param = param.renderParam(
+                    header=header or param.name.title(),
                     body=body,
                     note=note,
                     attention=attention
