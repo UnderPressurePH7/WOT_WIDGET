@@ -139,3 +139,6 @@ class StatsWrapper(object):
     
     def clear_all_data(self):
         self.data = {"BattleStats": {}, "PlayerInfo": {}}
+
+    def clear_battle_data(self):
+        self.data["BattleStats"] = {}
