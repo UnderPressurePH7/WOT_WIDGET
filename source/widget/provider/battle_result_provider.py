@@ -9,15 +9,19 @@ from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleResultsProvider(object):
     def __init__(self):
-        self.results_cache = []
+        self.inBattle = False
+        self.arenaUniqueIDs = []
 
         g_playerEvents.onBattleResultsReceived += self.onBattleResultsReceived
         BigWorld.callback(1.0, self.checkResultsCache)
         print_debug("[BattleResultsProvider] Initialized")
 
+    def setInBattle(self, inBattle):
+        self.inBattle = inBattle
+
     def setArenaUniqueID(self, arenaUniqueID):
-        if arenaUniqueID not in self.results_cache:
-            self.results_cache.append(arenaUniqueID)
+        if arenaUniqueID not in self.arenaUniqueIDs:
+            self.arenaUniqueIDs.append(arenaUniqueID)
 
     def checkResultsCache(self):
         try:
@@ -33,7 +37,7 @@ class BattleResultsProvider(object):
         if not hasattr(BigWorld.player(), 'battleResultsCache'):
             return
 
-        for arenaUniqueID in list(self.results_cache):
+        for arenaUniqueID in list(self.arenaUniqueIDs):
             try:
                 BigWorld.player().battleResultsCache.get(
                     arenaUniqueID,
@@ -59,8 +63,9 @@ class BattleResultsProvider(object):
     def onCachedResults(self, code, results, arenaUniqueID):
         if code > 0 and results:
             self.processBattleResults(results)
-            if arenaUniqueID in self.results_cache:
-                self.results_cache.remove(arenaUniqueID)
+            self.arenaUniqueIDs.remove(arenaUniqueID) if arenaUniqueID in self.arenaUniqueIDs else None
+            # if arenaUniqueID in self.arenaUniqueIDs:
+            #     self.arenaUniqueIDs.remove(arenaUniqueID)
 
     def processBattleResults(self, results):
         try:
@@ -121,6 +126,9 @@ class BattleResultsProvider(object):
                 player_name = players.get(accountDBID, {}).get('realName', 'Unknown')
 
                 g_statsWrapper.update_battle_stats(arena_id=arenaUniqueID, player_id=accountDBID, points=points, damage=damage, kills=kills, vehicle=vehicle_name, win=battle_result, duration=duration)
+            if self.inBattle:
+                print_debug("[BattleResultsProvider] Battle already processed, skipping sending stats.")
+                return
             result = g_serverManager.send_stats(player_id=accountDBID)
             if result:
                 g_statsWrapper.clear_battle_data()
@@ -129,11 +137,11 @@ class BattleResultsProvider(object):
                 print_debug("[BattleResultsProvider] Failed to send battle stats for Player ID: {}".format(accountDBID))
                 
             
-            self.results_cache.remove(arenaUniqueID) if arenaUniqueID in self.results_cache else None
+            
         except Exception as e:
             print_error('[BattleResultsProvider] Error processing battle results: {0}'.format(str(e)))
 
     def fini(self):
         g_playerEvents.onBattleResultsReceived -= self.onBattleResultsReceived
-        self.results_cache = []
+        self.arenaUniqueIDs = []
         print_debug("[BattleResultsProvider] Finalized.")

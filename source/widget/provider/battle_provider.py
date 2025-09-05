@@ -118,6 +118,7 @@ class BattleProvider():
             print_debug("[BattleProvider] guiType: {}".format(self.guiType))
             self.arenaUniqueID = getattr(self.arena, 'arenaUniqueID', 0)
             self.playerID = self.getAccountDatabaseID()
+            self.battleResultsProvider.setInBattle(True)
             self.battleResultsProvider.setArenaUniqueID(self.arenaUniqueID)
 
             if self.guiType != 1:
@@ -154,6 +155,7 @@ class BattleProvider():
 
     def onBattleSessionStop(self):
         try:
+            self.battleResultsProvider.setInBattle(False)
             if self.arena:
                 if self.guiType != 1:
                     print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session stop".format(self.guiType))
