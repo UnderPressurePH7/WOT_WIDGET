@@ -64,23 +64,6 @@ class BaseParameter(object):
 
         PARAM_REGISTRY[self.tokenName] = self
 
-    def _get_current_value_for_render(self):
-        try:
-            from ..settings import g_config
-            if hasattr(g_config, 'configFile') and g_config.configFile:
-                if hasattr(g_config.configFile, '_loaded_config_data'):
-                    config_data = g_config.configFile._loaded_config_data
-                    if config_data and self.name in config_data:
-                        return self.toMsaValue(config_data[self.name])
-                
-            if hasattr(self, 'value') and self.value != self.defaultValue:
-                return self.toMsaValue(self.value)
-                
-        except Exception as e:
-            print_error("[BaseParameter] Error getting current value for {}: {}".format(self.tokenName, e))
-
-        return self.defaultMsaValue
-
 
     def readValueFromConfigDictSafely(self, configDict):
         value = self.readValueFromConfigDict(configDict)
@@ -176,12 +159,12 @@ class CheckboxParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return toBool(jsonValue)
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "CheckBox",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
                 body=body,
@@ -239,12 +222,12 @@ class FloatTextInputParameter(BaseParameter):
         rawValue = float(jsonValue)
         return clamp(self.minValue, rawValue, self.maxValue)
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -262,12 +245,12 @@ class StepperParameter(NumericParameter):
                                            minValue, step, maxValue,
                                            defaultValue, disabledValue)
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "NumericStepper",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -286,12 +269,12 @@ class SliderParameter(NumericParameter):
         super(SliderParameter, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
         self.format_str = format_str
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "Slider",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -322,12 +305,12 @@ class ColorParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return toColorTuple(jsonValue)
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "ColorChoice",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "tooltip": createTooltip(
                 header="%s (%s: #%s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -459,12 +442,12 @@ class TextInputParameter(BaseParameter):
             value = value[:self.maxLength]
         return value
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -494,12 +477,12 @@ class HotkeyParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return jsonValue if isinstance(jsonValue, list) else []
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "HotKey",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "tooltip": createTooltip(
                 header="%s" % header,
                 body=body,
@@ -541,12 +524,12 @@ class RangeSliderParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return self.fromMsaValue(jsonValue)
 
-    def renderParam(self, header, body=None, note=None, attention=None):
+    def renderParam(self, header, value, body=None, note=None, attention=None):
         return {
             "type": "RangeSlider",
             "text": header,
             "varName": self.tokenName,
-            "value": self._get_current_value_for_render(),
+            "value": value,
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
