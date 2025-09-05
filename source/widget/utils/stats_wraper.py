@@ -18,20 +18,20 @@ class StatsWrapper(object):
         return None
 
     def add_player_info(self, player_id, player_name):
-        self.data["PlayerInfo"][unicode(player_id)] = unicode(player_name)
+        self.data["PlayerInfo"][(player_id)] = (player_name)
     
     def get_all_players_info(self):
         return dict(self.data["PlayerInfo"])
     
     def remove_player_info(self, player_id):
-        player_id = unicode(player_id)
+        player_id = (player_id)
         if player_id in self.data["PlayerInfo"]:
             del self.data["PlayerInfo"][player_id]
             return True
         return False
     
     def create_battle(self, arena_id, start_time=0, duration=0, win=-1, map_name=u"Unknown Map"):
-        arena_id = unicode(arena_id)
+        arena_id = (arena_id)
         self.data["BattleStats"][arena_id] = {
             "startTime": start_time,
             "duration": duration,
@@ -41,22 +41,19 @@ class StatsWrapper(object):
         }
     
     def get_battle(self, arena_id):
-        return self.data["BattleStats"].get(unicode(arena_id))
+        return self.data["BattleStats"].get(arena_id)
     
     def get_all_battles(self):
         return list(self.data["BattleStats"].keys())
     
     def remove_battle(self, arena_id):
-        arena_id = unicode(arena_id)
         if arena_id in self.data["BattleStats"]:
             del self.data["BattleStats"][arena_id]
             return True
         return False
     
     def add_player_to_battle(self, arena_id, player_id, name=u"Unknown Player", damage=0, kills=0, points=0, vehicle=u"Unknown Vehicle"):
-        arena_id = unicode(arena_id)
-        player_id = unicode(player_id)
-        
+
         if arena_id not in self.data[u"BattleStats"]:
             self.create_battle(arena_id)
         
@@ -66,13 +63,13 @@ class StatsWrapper(object):
         }
     
     def get_player_battle_stats(self, arena_id, player_id):
-        player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
+        player_data = self._get_player_data(arena_id, player_id)
         if player_data:
             return dict(player_data) 
         return None
 
     def update_battle_stats(self, arena_id, win=None, duration=None, player_id=None, name=None, damage=None, kills=None, vehicle=None):
-        player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
+        player_data = self._get_player_data(arena_id, player_id)
         if not player_data:
             return False
 
@@ -108,8 +105,8 @@ class StatsWrapper(object):
         print("[DAMAGE_TRACE] Original damage: {} (type: {})".format(damage, type(damage)))
         if not isinstance(damage, (int, float)) or damage <= 0:
             return False
-            
-        player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
+
+        player_data = self._get_player_data(arena_id, player_id)
         if player_data:
             print("[DAMAGE_TRACE] Adding damage: {} to player ID: {} in arena ID: {}".format(damage, player_id, arena_id))
             player_data["damage"] += damage
@@ -121,7 +118,7 @@ class StatsWrapper(object):
         if not isinstance(kills, (int, float)) or kills <= 0:
             return False
 
-        player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
+        player_data = self._get_player_data(arena_id, player_id)
         if player_data:
             player_data["kills"] += kills
             player_data["points"] += kills * self.pointPerFrag
