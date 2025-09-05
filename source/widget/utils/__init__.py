@@ -8,7 +8,7 @@ __all__ = [
     'g_statsWrapper'
 ]
 
-DEBUG_MODE = True  
+DEBUG_MODE = False
 
 def print_log(log):
     print("[WIDGET]: {}".format(str(log)))
