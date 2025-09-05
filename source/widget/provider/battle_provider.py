@@ -170,13 +170,16 @@ class BattleProvider():
 
     def onVehicleKilled(self, target_id, attacker_id, reason, is_respawn, *args):
         try:
+            from ..settings import g_config
+
             if attacker_id > 0 and self.isCurrentPlayer(attacker_id):
                 
                 g_statsWrapper.add_kills(self.arenaUniqueID, self.playerID, 1)
                 g_statsWrapper.add_points(self.arenaUniqueID, self.playerID, g_statsWrapper.pointPerFrag)
-                result = g_serverManager.send_stats(player_id=self.playerID)
-                if result:
-                    print_debug("[BattleProvider] Vehicle killed info sent successfully for Player ID: {}".format(self.playerID))
+                if g_config.configParams.tournamentType.value == 'platoon':
+                    result = g_serverManager.send_stats(player_id=self.playerID)
+                    if result:
+                        print_debug("[BattleProvider] Vehicle killed info sent successfully for Player ID: {}".format(self.playerID))
 
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle killed event: {}".format(e))
@@ -184,13 +187,16 @@ class BattleProvider():
 
     def onVehicleHealthChanged(self, target_id, attacker_id, damage):
         try:
+            from ..settings import g_config
+            
             if damage > 0 and self.isCurrentPlayer(attacker_id):
                 actual_damage = max(0, damage)
                 g_statsWrapper.add_damage(self.arenaUniqueID, self.playerID, actual_damage)
                 g_statsWrapper.add_points(self.arenaUniqueID, self.playerID, actual_damage)
-                result = g_serverManager.send_stats(player_id=self.playerID)
-                if result:
-                    print_debug("[BattleProvider] Vehicle health changed info sent successfully for Player ID: {}".format(self.playerID))
+                if g_config.configParams.tournamentType.value == 'platoon':
+                    result = g_serverManager.send_stats(player_id=self.playerID)
+                    if result:
+                        print_debug("[BattleProvider] Vehicle health changed info sent successfully for Player ID: {}".format(self.playerID))
 
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle health changed event: {}".format(e))
