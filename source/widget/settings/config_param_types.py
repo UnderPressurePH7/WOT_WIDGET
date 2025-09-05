@@ -64,6 +64,24 @@ class BaseParameter(object):
 
         PARAM_REGISTRY[self.tokenName] = self
 
+    def _get_current_value_for_render(self):
+        try:
+            from ..settings import g_config
+            if hasattr(g_config, 'configFile') and g_config.configFile:
+                if hasattr(g_config.configFile, '_loaded_config_data'):
+                    config_data = g_config.configFile._loaded_config_data
+                    if config_data and self.name in config_data:
+                        return self.toMsaValue(config_data[self.name])
+                
+            if hasattr(self, 'value') and self.value != self.defaultValue:
+                return self.toMsaValue(self.value)
+                
+        except Exception as e:
+            print_error("[BaseParameter] Error getting current value for {}: {}".format(self.tokenName, e))
+
+        return self.defaultMsaValue
+
+
     def readValueFromConfigDictSafely(self, configDict):
         value = self.readValueFromConfigDict(configDict)
         return value if value is not None else self.defaultValue
@@ -163,7 +181,7 @@ class CheckboxParameter(BaseParameter):
             "type": "CheckBox",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
                 body=body,
@@ -226,7 +244,7 @@ class FloatTextInputParameter(BaseParameter):
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -249,7 +267,7 @@ class StepperParameter(NumericParameter):
             "type": "NumericStepper",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -273,7 +291,7 @@ class SliderParameter(NumericParameter):
             "type": "Slider",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,
@@ -309,7 +327,7 @@ class ColorParameter(BaseParameter):
             "type": "ColorChoice",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "tooltip": createTooltip(
                 header="%s (%s: #%s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -446,7 +464,7 @@ class TextInputParameter(BaseParameter):
             "type": "TextInput",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, self.defaultMsaValue),
                 body=body,
@@ -481,7 +499,7 @@ class HotkeyParameter(BaseParameter):
             "type": "HotKey",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "tooltip": createTooltip(
                 header="%s" % header,
                 body=body,
@@ -528,7 +546,7 @@ class RangeSliderParameter(BaseParameter):
             "type": "RangeSlider",
             "text": header,
             "varName": self.tokenName,
-            "value": self.defaultMsaValue,
+            "value": self._get_current_value_for_render(),
             "minimum": self.minValue,
             "maximum": self.maxValue,
             "snapInterval": self.step,

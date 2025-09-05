@@ -8,6 +8,7 @@ class ConfigFile(object):
     def __init__(self, config_params):
         self.config_path = os.path.join('mods', 'configs', 'under_pressure', 'widget.json')
         self.config_params = config_params
+        self._loaded_config_data = None
 
     def _ensure_config_exists(self):
         try:
@@ -76,8 +77,10 @@ class ConfigFile(object):
                         content = f.read().strip()
                 else:
                     return False
-                    
+
+              
             config_data = json.loads(content)
+            self._loaded_config_data = config_data 
             print_debug("[ConfigFile] Loaded config data: {}".format(config_data))
             
             config_items = self.config_params.items()
@@ -98,12 +101,14 @@ class ConfigFile(object):
                 
         except ValueError as e:
             print_error("[ConfigFile] Invalid JSON in config file: {}".format(str(e)))
+            self._loaded_config_data = None
             config_items = self.config_params.items()
             for tokenName, param in config_items.items():
                 param.value = param.defaultValue
             return False
         except Exception as e:
             print_error("[ConfigFile] Error loading config: {}".format(str(e)))
+            self._loaded_config_data = None
             config_items = self.config_params.items()
             for tokenName, param in config_items.items():
                 param.value = param.defaultValue
@@ -125,6 +130,7 @@ class ConfigFile(object):
             with open(self.config_path, 'w') as f:
                 json.dump(config_data, f, indent=4, ensure_ascii=False)
             
+            self._loaded_config_data = config_data
             print_debug("[ConfigFile] Config saved to: {}".format(self.config_path))
             
             if os.path.exists(self.config_path):
@@ -139,6 +145,9 @@ class ConfigFile(object):
         except Exception as e:
             print_error("[ConfigFile] Error saving config: {}".format(str(e)))
             return False
+
+    def get_loaded_data(self):
+        return self._loaded_config_data
 
     def exists(self):
         exists = os.path.exists(self.config_path)
