@@ -178,7 +178,9 @@ class BattleProvider():
             result = g_serverManager.send_stats(player_id=self.playerID)
             if result:
                 print_debug("[BattleProvider] Battle started info sent successfully for Player ID: {}".format(self.playerID))
-
+            else:
+                print_debug("[BattleProvider] Failed to send battle started info for Player ID: {}".format(self.playerID))
+    
     def onVehicleKilled(self, target_id, attacker_id, reason, is_respawn, *args):
         try:
             from ..settings import g_config
@@ -191,7 +193,8 @@ class BattleProvider():
                     result = g_serverManager.send_stats(player_id=self.playerID)
                     if result:
                         print_debug("[BattleProvider] Vehicle killed info sent successfully for Player ID: {}".format(self.playerID))
-
+                    else:
+                        print_debug("[BattleProvider] Failed to send vehicle killed info for Player ID: {}".format(self.playerID))
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle killed event: {}".format(e))
 
@@ -208,7 +211,9 @@ class BattleProvider():
                     result = g_serverManager.send_stats(player_id=self.playerID)
                     if result:
                         print_debug("[BattleProvider] Vehicle health changed info sent successfully for Player ID: {}".format(self.playerID))
-
+                    else:
+                        print_debug("[BattleProvider] Failed to send vehicle health changed info for Player ID: {}".format(self.playerID))
+        
         except Exception as e:
             print_error("[BattleProvider] Error processing vehicle health changed event: {}".format(e))
 

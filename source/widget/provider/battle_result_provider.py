@@ -124,7 +124,9 @@ class BattleResultsProvider(object):
             result = g_serverManager.send_stats(player_id=accountDBID)
             if result:
                 print_debug("[BattleResultsProvider] Battle stats sent successfully for Player ID: {}".format(accountDBID))
-            
+            else:
+                print_debug("[BattleResultsProvider] Failed to send battle stats for Player ID: {}".format(accountDBID))
+                
             g_statsWrapper.clear_battle_data()
             self.results_cache.remove(arenaUniqueID) if arenaUniqueID in self.results_cache else None
         except Exception as e:
