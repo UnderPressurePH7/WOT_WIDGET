@@ -159,12 +159,13 @@ class CheckboxParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return toBool(jsonValue)
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
+        current_value = self.toMsaValue(self.value)
         return {
             "type": "CheckBox",
             "text": header,
             "varName": self.tokenName,
-            "value": value,
+            "value": current_value,
             "tooltip": createTooltip(
                 header="%s (%s: %s)" % (header, Translator.DEFAULT_VALUE, Translator.CHECKED if self.defaultValue else Translator.UNCHECKED),
                 body=body,
@@ -222,7 +223,7 @@ class FloatTextInputParameter(BaseParameter):
         rawValue = float(jsonValue)
         return clamp(self.minValue, rawValue, self.maxValue)
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "TextInput",
@@ -271,7 +272,7 @@ class SliderParameter(NumericParameter):
         super(SliderParameter, self).__init__(path, castFunction, minValue, step, maxValue, defaultValue, disabledValue)
         self.format_str = format_str
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "Slider",
@@ -308,7 +309,7 @@ class ColorParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return toColorTuple(jsonValue)
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "ColorChoice",
@@ -448,7 +449,7 @@ class TextInputParameter(BaseParameter):
             value = value[:self.maxLength]
         return value
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "TextInput",
@@ -484,7 +485,7 @@ class HotkeyParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return jsonValue if isinstance(jsonValue, list) else []
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "HotKey",
@@ -532,7 +533,7 @@ class RangeSliderParameter(BaseParameter):
     def fromJsonValue(self, jsonValue):
         return self.fromMsaValue(jsonValue)
 
-    def renderParam(self, header, value, body=None, note=None, attention=None):
+    def renderParam(self, header, body=None, note=None, attention=None):
         current_value = self.toMsaValue(self.value)
         return {
             "type": "RangeSlider",
