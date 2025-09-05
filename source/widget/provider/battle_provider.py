@@ -115,7 +115,7 @@ class BattleProvider():
                 return
             
             self.guiType = getattr(self.arena, 'guiType', None)
-
+            print_debug("[BattleProvider] guiType: {}".format(self.guiType))
             self.arenaUniqueID = getattr(self.arena, 'arenaUniqueID', 0)
             self.playerID = self.getAccountDatabaseID()
             self.battleResultsProvider.setArenaUniqueID(self.arenaUniqueID)

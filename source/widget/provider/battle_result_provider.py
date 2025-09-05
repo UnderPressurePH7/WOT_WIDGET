@@ -68,6 +68,7 @@ class BattleResultsProvider(object):
             common = results.get('common', {})
             
             guiType = common.get('guiType', None)
+            print_debug("[BattleResultsProvider] guiType: {}".format(guiType))
             if guiType != 1:
                 print_debug("[BattleResultsProvider] Unsupported game mode (guiType: {}), skipping results processing".format(guiType))
                 return
