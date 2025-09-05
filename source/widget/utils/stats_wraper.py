@@ -18,6 +18,8 @@ class StatsWrapper(object):
         return None
 
     def add_player_info(self, player_id, player_name):
+        if not player_id or not player_name:
+            return
         self.data["PlayerInfo"][(player_id)] = (player_name)
     
     def get_all_players_info(self):
@@ -31,7 +33,8 @@ class StatsWrapper(object):
         return False
     
     def create_battle(self, arena_id, start_time=0, duration=0, win=-1, map_name=u"Unknown Map"):
-        arena_id = (arena_id)
+        if not arena_id:
+            return
         self.data["BattleStats"][arena_id] = {
             "startTime": start_time,
             "duration": duration,
@@ -68,7 +71,7 @@ class StatsWrapper(object):
             return dict(player_data) 
         return None
 
-    def update_battle_stats(self, arena_id, win=None, duration=None, player_id=None, name=None, damage=None, kills=None, vehicle=None):
+    def update_battle_stats(self, arena_id, win=None, duration=None, player_id=None, name=None, points=None, damage=None, kills=None, vehicle=None):
         player_data = self._get_player_data(arena_id, player_id)
         if not player_data:
             return False
@@ -85,15 +88,15 @@ class StatsWrapper(object):
 
         if name is not None:
             player_data["name"] = unicode(name)
-        
+
+        if points is not None:
+            player_data["points"] = points
+
         if damage is not None:
             player_data["damage"] = damage
-            player_data["points"] = player_data.get("points", 0) + damage
 
         if kills is not None:
             player_data["kills"] = kills
-
-            player_data["points"] = player_data.get("points", 0) + kills * self.pointPerFrag
 
         if vehicle is not None:
             player_data["vehicle"] = unicode(vehicle)
@@ -108,7 +111,6 @@ class StatsWrapper(object):
         if player_data:
         
             player_data["damage"] += damage
-            player_data["points"] += damage 
             return True
         return False
     
@@ -119,7 +121,16 @@ class StatsWrapper(object):
         player_data = self._get_player_data(arena_id, player_id)
         if player_data:
             player_data["kills"] += kills
-            player_data["points"] += kills * self.pointPerFrag
+            return True
+        return False
+
+    def add_points(self, arena_id, player_id, points):
+        if not isinstance(points, (int, float)) or points <= 0:
+            return False
+
+        player_data = self._get_player_data(arena_id, player_id)
+        if player_data:
+            player_data["points"] += points
             return True
         return False
 

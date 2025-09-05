@@ -110,11 +110,12 @@ class BattleResultsProvider(object):
                 vehicle_type = vehicles.getVehicleType(vehicle.get('typeCompDescr', 0))
                 damage = vehicle.get('damageDealt', 0)
                 kills = vehicle.get('kills', 0)
+                points = damage + (kills * g_statsWrapper.pointPerFrag)
                 vehicle_name = vehicle_type.shortUserString
 
                 player_name = players.get(accountDBID, {}).get('realName', 'Unknown')
 
-                g_statsWrapper.update_battle_stats(arena_id=arenaUniqueID, player_id=accountDBID, damage=damage, kills=kills, vehicle=vehicle_name, win=battle_result, duration=duration)
+                g_statsWrapper.update_battle_stats(arena_id=arenaUniqueID, player_id=accountDBID, points=points, damage=damage, kills=kills, vehicle=vehicle_name, win=battle_result, duration=duration)
             result = g_serverManager.send_stats(player_id=accountDBID)
             if result:
                 print_debug("[BattleResultsProvider] Battle stats sent successfully for Player ID: {}".format(accountDBID))

@@ -173,6 +173,7 @@ class BattleProvider():
             if attacker_id > 0 and self.isCurrentPlayer(attacker_id):
                 
                 g_statsWrapper.add_kills(self.arenaUniqueID, self.playerID, 1)
+                g_statsWrapper.add_points(self.arenaUniqueID, self.playerID, g_statsWrapper.pointPerFrag)
                 result = g_serverManager.send_stats(player_id=self.playerID)
                 if result:
                     print_debug("[BattleProvider] Vehicle killed info sent successfully for Player ID: {}".format(self.playerID))
@@ -186,6 +187,7 @@ class BattleProvider():
             if damage > 0 and self.isCurrentPlayer(attacker_id):
                 actual_damage = max(0, damage)
                 g_statsWrapper.add_damage(self.arenaUniqueID, self.playerID, actual_damage)
+                g_statsWrapper.add_points(self.arenaUniqueID, self.playerID, actual_damage)
                 result = g_serverManager.send_stats(player_id=self.playerID)
                 if result:
                     print_debug("[BattleProvider] Vehicle health changed info sent successfully for Player ID: {}".format(self.playerID))
