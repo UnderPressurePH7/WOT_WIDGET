@@ -123,11 +123,12 @@ class BattleResultsProvider(object):
                 g_statsWrapper.update_battle_stats(arena_id=arenaUniqueID, player_id=accountDBID, points=points, damage=damage, kills=kills, vehicle=vehicle_name, win=battle_result, duration=duration)
             result = g_serverManager.send_stats(player_id=accountDBID)
             if result:
+                g_statsWrapper.clear_battle_data()
                 print_debug("[BattleResultsProvider] Battle stats sent successfully for Player ID: {}".format(accountDBID))
             else:
                 print_debug("[BattleResultsProvider] Failed to send battle stats for Player ID: {}".format(accountDBID))
                 
-            g_statsWrapper.clear_battle_data()
+            
             self.results_cache.remove(arenaUniqueID) if arenaUniqueID in self.results_cache else None
         except Exception as e:
             print_error('[BattleResultsProvider] Error processing battle results: {0}'.format(str(e)))
