@@ -115,14 +115,15 @@ class BattleProvider():
                 return
             
             self.guiType = getattr(self.arena, 'guiType', None)
+
+            self.arenaUniqueID = getattr(self.arena, 'arenaUniqueID', 0)
+            self.playerID = self.getAccountDatabaseID()
+            self.battleResultsProvider.setArenaUniqueID(self.arenaUniqueID)
+
             if self.guiType != 1:
                 print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session start".format(self.guiType))
                 return
-            self.arenaUniqueID = getattr(self.arena, 'arenaUniqueID', 0)
-            self.playerID = self.getAccountDatabaseID()
-
-            self.battleResultsProvider.setArenaUniqueID(self.arenaUniqueID)
-
+            
             if not self.playerID:
                 print_debug("[BattleProvider]Player ID not available, retrying...")
                 BigWorld.callback(2.0, self.onBattleSessionStart)
@@ -170,9 +171,6 @@ class BattleProvider():
     def onPeriodChange(self, period, periodEndTime, periodLength, periodAdditionalInfo, *args):
         period_name = ARENA_PERIOD_NAMES[period]
         if period_name == "PREBATTLE":
-            if self.guiType != 1:
-                print_debug("[BattleProvider] Unsupported game mode (guiType: {}), skipping battle session start".format(self.guiType))
-                return
             g_statsWrapper.create_battle(arena_id=self.arenaUniqueID, start_time=time.time(), duration=0, win=-1, map_name=self.getMapName())
             g_statsWrapper.add_player_to_battle(arena_id=self.arenaUniqueID, player_id=self.playerID, name=self.getAccountName(), vehicle=self.getVehicleName())
             result = g_serverManager.send_stats(player_id=self.playerID)
