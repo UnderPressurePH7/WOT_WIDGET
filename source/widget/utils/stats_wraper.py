@@ -104,11 +104,14 @@ class StatsWrapper(object):
         return True
 
     def add_damage(self, arena_id, player_id, damage):
+        print("[DAMAGE_TRACE]  BattleStats Data: {}".format(self.data.get("BattleStats")))
+        print("[DAMAGE_TRACE] Original damage: {} (type: {})".format(damage, type(damage)))
         if not isinstance(damage, (int, float)) or damage <= 0:
             return False
             
         player_data = self._get_player_data(unicode(arena_id), unicode(player_id))
         if player_data:
+            print("[DAMAGE_TRACE] Adding damage: {} to player ID: {} in arena ID: {}".format(damage, player_id, arena_id))
             player_data["damage"] += damage
             player_data["points"] += damage 
             return True
