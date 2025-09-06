@@ -10,16 +10,12 @@ from ..utils import print_error, print_debug, g_statsWrapper
 
 class BattleResultsProvider(object):
     def __init__(self):
-        self.inBattle = False
         self.arenaUniqueIDs = []
 
         g_playerEvents.onBattleResultsReceived += self.onBattleResultsReceived
         self.battleResultsCacheLoop()
 
         print_debug("[BattleResultsProvider] Initialized")
-
-    def setInBattle(self, inBattle):
-        self.inBattle = inBattle
 
     def setArenaUniqueID(self, arenaUniqueID):
         if arenaUniqueID not in self.arenaUniqueIDs:
@@ -123,10 +119,6 @@ class BattleResultsProvider(object):
                     damage=damage, kills=kills, vehicle=vehicle_name,
                     win=battle_result, duration=duration
                 )
-
-            if self.inBattle:
-                print_debug("[BattleResultsProvider] Already in battle, skipping sending stats.")
-                return
 
             result = g_serverManager.send_stats(player_id=accountDBID)
             if result:
