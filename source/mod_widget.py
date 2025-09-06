@@ -1,7 +1,7 @@
 from widget.provider import initialize_providers, finalize_providers
 from widget.utils import print_error, print_log
 
-__version__ = "0.0.2" 
+__version__ = "0.0.3" 
 __author__ = "Under_Pressure"
 __copyright__ = "Copyright 2025, Under_Pressure"
 __mod_name__ = "Widget"

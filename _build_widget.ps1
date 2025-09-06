@@ -1,7 +1,7 @@
 $PythonExe = "C:\Python27\python.exe"
 $PackerUser = "me.under_pressure"
 $PackerName = "widget"
-$PackerVersion = "0.0.2"
+$PackerVersion = "0.0.3"
 $PackerDescription = "None"
 
 
