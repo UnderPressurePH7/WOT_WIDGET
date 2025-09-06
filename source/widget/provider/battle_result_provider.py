@@ -34,7 +34,7 @@ class BattleResultsProvider(object):
             try:
                 BigWorld.player().battleResultsCache.get(arenaID, resultCallback)
             except Exception as e:
-                print_error("[BattleResultsProvider] battleResultsCache error: {}".format(e))
+                print_debug("[BattleResultsProvider] battleResultsCache error: {}".format(e))
 
     def onBattleResultsReceived(self, isPlayerVehicle, results):
         try:
