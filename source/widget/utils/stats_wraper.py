@@ -140,5 +140,6 @@ class StatsWrapper(object):
     def clear_all_data(self):
         self.data = {"BattleStats": {}, "PlayerInfo": {}}
 
-    def clear_battle_data(self):
-        self.data["BattleStats"] = {}
+    def clear_current_battle_data(self, arena_id):
+        if arena_id in self.data["BattleStats"]:
+            del self.data["BattleStats"][arena_id]
